@@ -1,0 +1,346 @@
+/* ============================================================
+   FORM — Multi-step
+   ============================================================ */
+
+/* ── PAGE WRAPPER ── */
+.form-page {
+  min-height: 100vh;
+  background: var(--whitesmoke);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.form-page::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 10%, rgba(200,42,42,.04) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 80% 90%, rgba(97,97,255,.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── MINI HEADER ── */
+.form-mini-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 1.25rem 2.5rem;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  display: flex;
+  align-items: center;
+}
+.form-logo {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--almost-black);
+  text-decoration: none;
+}
+
+/* ── CONTAINER ── */
+.form-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1.5rem 4rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── PROGRESS ── */
+.form-progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 2.5rem;
+}
+.form-step-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background var(--transition-med), box-shadow var(--transition-med);
+  position: relative;
+  z-index: 1;
+}
+.form-step-dot.pending {
+  background: var(--white);
+  color: var(--grey);
+  border: 1.5px solid var(--light-grey);
+}
+.form-step-dot.active {
+  background: var(--red);
+  color: var(--white);
+  box-shadow: 0 0 0 5px rgba(200,42,42,.18);
+}
+.form-step-dot.done {
+  background: var(--almost-black);
+  color: var(--white);
+  border: none;
+}
+.form-step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--light-grey);
+  min-width: 48px;
+  max-width: 80px;
+  transition: background var(--transition-med);
+  position: relative;
+  z-index: 0;
+}
+.form-step-line.done { background: var(--almost-black); }
+
+/* ── CARD ── */
+@keyframes stepEnter {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes formSpin {
+  to { transform: rotate(360deg); }
+}
+
+.form-card {
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,.07);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: var(--shadow-lg);
+  animation: stepEnter .35s var(--ease-out-expo);
+  position: relative;
+  overflow: hidden;
+}
+/* Accent line at top */
+.form-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--red), var(--monday-purple));
+}
+
+/* ── STEP HEAD ── */
+.form-step-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: .6rem;
+}
+.form-title {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1.15;
+  margin-bottom: .4rem;
+}
+.form-subtitle {
+  font-size: var(--text-sm);
+  color: var(--dark-grey);
+  margin-bottom: 2rem;
+}
+
+/* ── FIELDS ── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  margin-bottom: 1.1rem;
+}
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--almost-black);
+  display: flex;
+  gap: .4em;
+  align-items: baseline;
+}
+.form-label-opt {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--grey);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  font-family: "Inter Tight", sans-serif;
+  font-size: var(--text-sm);
+  color: var(--almost-black);
+  background: var(--white);
+  border: 1.5px solid var(--light-grey);
+  border-radius: var(--radius-md);
+  padding: .85em 1.1em;
+  width: 100%;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--almost-black);
+  box-shadow: 0 0 0 3px rgba(17,17,17,.08);
+}
+.form-input::placeholder,
+.form-textarea::placeholder { color: var(--grey); }
+.form-input.has-error,
+.form-select.has-error {
+  border-color: var(--monday-red);
+  box-shadow: 0 0 0 3px rgba(228,66,88,.1);
+}
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%239f9f9f' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .85rem center;
+  padding-right: 2.5em;
+  cursor: pointer;
+}
+.form-textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.6;
+}
+
+.form-error {
+  font-size: var(--text-xs);
+  color: var(--monday-red);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: .35em;
+}
+.form-error .material-icons { font-size: 14px; }
+
+/* ── SEGMENTED CONTROL (B2B / B2C) ── */
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .35rem;
+  background: var(--whitesmoke);
+  padding: .3rem;
+  border-radius: var(--radius-lg);
+}
+.segmented-btn {
+  padding: .75em 1em;
+  border-radius: var(--radius-md);
+  font-family: "Inter Tight", sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-med);
+  background: transparent;
+  color: var(--grey);
+  line-height: 1;
+}
+.segmented-btn.active {
+  background: var(--white);
+  color: var(--almost-black);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── CHIP GROUP (single & multi select) ── */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.chip {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: .5em 1.1em;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--light-grey);
+  background: transparent;
+  color: var(--dark-grey);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: "Inter Tight", sans-serif;
+  line-height: 1;
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: var(--almost-black);
+  color: var(--almost-black);
+}
+.chip.selected {
+  border-color: var(--almost-black);
+  background: var(--almost-black);
+  color: var(--white);
+}
+/* Multi-select chip (áreas de interesse) — red accent when selected */
+.chip--multi.selected {
+  border-color: var(--red);
+  background: var(--red);
+  color: var(--white);
+}
+.chip-group.has-error .chip { border-color: rgba(228,66,88,.3); }
+
+/* ── FORM ROW (2 columns) ── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+.form-row .form-group { margin-bottom: 0; }
+
+/* ── FOOTER ROW ── */
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--light-grey);
+}
+.form-step-count {
+  font-size: var(--text-xs);
+  color: var(--grey);
+  font-weight: 500;
+}
+
+/* ── SUBMIT ERROR ── */
+.submit-error {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  background: rgba(228,66,88,.08);
+  border: 1px solid rgba(228,66,88,.2);
+  border-radius: var(--radius-md);
+  padding: .85rem 1rem;
+  font-size: var(--text-sm);
+  color: var(--monday-red);
+  margin-top: 1.25rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.submit-error .material-icons { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── LOADING SPINNER ── */
+.form-spin {
+  animation: formSpin .7s linear infinite;
+  display: inline-block;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .form-container { padding: 2rem 1rem 3rem; }
+  .form-card { padding: 2rem 1.5rem; border-radius: var(--radius-lg); }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+  .form-step-line { min-width: 32px; }
+}

@@ -1,0 +1,2761 @@
+{
+  "name": "CHATBOT ARV",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7390eb48-71ff-46a7-8419-c99634567d2f",
+              "name": "NORMALIZACAO.NUMERO-LEAD",
+              "value": "={{ $('SETTA-INFOS').item.json.dados.telefone }}",
+              "type": "string"
+            },
+            {
+              "id": "51da2bf7-7a77-47c1-a3a4-9d92576aa7a0",
+              "name": "NORMALIZACAO.CHATID",
+              "value": "={{ $('SETTA-INFOS').item.json.dados.chatid }}",
+              "type": "string"
+            },
+            {
+              "id": "2a53754b-82a2-4cc6-98d3-2ac873b5a1d6",
+              "name": "=NORMALIZACAO.MENSAGEM",
+              "value": "={{ $json[\"audio-texto\"] }}{{ $('SETTA-INFOS').item.json.dados.message }}{{ $json[\"MENSAGEM-IMAGEM\"] }}{{ $json.DESCRITIVO_PDF }}",
+              "type": "string"
+            },
+            {
+              "id": "df84a33c-a6a7-48ab-9ddc-c8d4e6748c9d",
+              "name": "NORMALIZACAO.TIMESTAMP",
+              "value": "={{ $('SETTA-INFOS').item.json.dados.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "836b4b11-a062-45f7-b82b-17e0c6cc2b03",
+              "name": "NORMALIZACAO.messageId",
+              "value": "={{ $('SETTA-INFOS').item.json.dados.messageId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1152,
+        256
+      ],
+      "id": "86c02aef-cc30-41c8-8fe5-41a800a2f09e",
+      "name": "NUMERO-TEXT"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $json.NORMALIZACAO['NUMERO-LEAD'] }}",
+        "messageData": "={{ JSON.stringify($json.NORMALIZACAO) }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        256
+      ],
+      "id": "dbace838-ae83-4edc-aa30-cb2616125902",
+      "name": "ENVIA PARA O BD",
+      "retryOnFail": true,
+      "credentials": {
+        "redis": {
+          "id": "79KYHzFBfsq2jAZ2",
+          "name": "ARV CHATBOT REDIS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -656,
+        896
+      ],
+      "id": "a7c36a46-08e4-45aa-b012-07f6b7f2ff93",
+      "name": "TRANSCRICAO",
+      "credentials": {
+        "openAiApi": {
+          "id": "2sZ5IU2zJTARWlUB",
+          "name": "SDR OPENAI KEY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "75eadac9-af38-42bd-b7cd-17f24c218b02",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        256
+      ],
+      "id": "1ca6af76-36ab-485a-85c6-cf7afd6c58d7",
+      "name": "If3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        528
+      ],
+      "id": "d85f3582-a7a8-4573-9c3e-acfde437f974",
+      "name": "Wait",
+      "webhookId": "3353b666-355a-4157-a28e-c3fa64c624d9"
+    },
+    {
+      "parameters": {},
+      "id": "8a915e5f-d152-4965-bfde-de13ebf02679",
+      "name": "Wait1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2608,
+        1248
+      ],
+      "webhookId": "0fa3abfd-36ee-40b2-b446-24c2a3581c30"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "id": "acb58496-e051-49d3-8fe3-ea857e7b46a0",
+      "name": "Split Out2",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "51be73da-da80-4346-8691-c099fadab89a",
+      "name": "Loop Over Items2",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2112,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "34bf90e7-c120-4130-aa4c-1b878be043a4",
+              "name": "output",
+              "value": "={{ $json.output.split('\\n\\n') }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aaec08db-290c-4a1a-a532-e0e0a7a3e471",
+      "name": "SPLIT-OUTPUT",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1616,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2080,
+        1936
+      ],
+      "id": "54e086b1-ae93-436b-84c3-1cab3cd8b8ad",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "2sZ5IU2zJTARWlUB",
+          "name": "SDR OPENAI KEY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.messages.first()).messageId.toString()}}",
+                    "rightValue": "={{ $('NUMERO-TEXT').item.json.NORMALIZACAO.messageId }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "id": "b127e16b-f90a-4dfb-ac63-276fee74d7ff"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "faz-nada"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0fb9b6b2-f174-4b3b-9e22-8875799c19fb",
+                    "leftValue": "={{ JSON.parse($json.messages.last()).TIMESTAMP}}",
+                    "rightValue": "={{ $now.minus(20,'seconds') }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "prosseguir"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "esperar"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -304,
+        240
+      ],
+      "id": "5092eb20-9b91-4cd9-93fd-52d00c5c9e83",
+      "name": "Switch1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        512
+      ],
+      "id": "dd02d35f-09a4-4f41-86e5-83d69362a283",
+      "name": "Wait2",
+      "webhookId": "7d4fe8c0-8ab8-48ba-b6ab-85b2e3fc6bc8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "09d584a6-575b-4203-ab68-f7034ffda7e2",
+              "name": "messages",
+              "value": "={{ $json.messages.map(value => JSON.parse(value).MENSAGEM).join('\\n\\n') }}\n\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        256
+      ],
+      "id": "c774d6d0-7cb7-4fcc-b865-7c50c5510bc5",
+      "name": "MSG"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('NUMERO-TEXT').item.json.NORMALIZACAO['NUMERO-LEAD'] }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        16,
+        256
+      ],
+      "id": "53f7bd01-55c0-47ad-b21b-18d221ff1560",
+      "name": "Redis2",
+      "credentials": {
+        "redis": {
+          "id": "79KYHzFBfsq2jAZ2",
+          "name": "ARV CHATBOT REDIS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Chame essa tool quando o lead lhe oferecer o nome da cidade em que reside. essa ferramenta irá enriquecer os dados sobre o lugar.",
+        "workflowId": {
+          "__rl": true,
+          "value": "VeewxvVaBEezcLrK",
+          "mode": "list",
+          "cachedResultName": "SW -> PROCURA ESTADO + CALCULA DISTANCIA PLANTA"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "leadid": "={{ $('SETTA-INFOS').item.json.dados.telefone }}",
+            "cidade": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cidade', `envie a cidade do lead para essa tool`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "leadid",
+              "displayName": "leadid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        1696
+      ],
+      "id": "78c96207-bdc3-4953-ad4c-9b44cf27b44d",
+      "name": "PROCURA_CIDADE"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a866ef2a-bc54-4b3e-a5d4-ffc618f87944",
+              "leftValue": "={{ $('SETTA-INFOS').item.json.dados.fromMe }}",
+              "rightValue": "={{ $json.dados.numeroSDR }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2640,
+        944
+      ],
+      "id": "c5a8af58-2a37-47b3-9890-f1622c82037b",
+      "name": "MINHA MSG?"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "block",
+        "key": "={{ $('Webhook').item.json.body.chatLid }}_block",
+        "keyType": "string",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        928
+      ],
+      "id": "5be7a13a-703a-4203-b105-d3617f540146",
+      "name": "PEGA_CHATID_BLOCK",
+      "credentials": {
+        "redis": {
+          "id": "79KYHzFBfsq2jAZ2",
+          "name": "ARV CHATBOT REDIS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8933d8e3-e43b-4ced-a3dc-e0f4bc7602c9",
+              "leftValue": "={{ $('PEGA_CHATID_BLOCK').item.json.block }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1984,
+        928
+      ],
+      "id": "500fdbb0-5a25-4924-afa6-74c681f25cfb",
+      "name": "SE ESTIVER VAZIO"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "bc3b2562-c5e0-4fce-98de-1faa0eba605a",
+                    "leftValue": "={{ $('SETTA-INFOS').item.json.dados.message }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TEXT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('SETTA-INFOS').item.json.dados.audio }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "5ce629f1-fdca-4161-8c21-dfb1338f2e1f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AUDIO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e985d872-d429-448c-86b1-8a9cdd25201f",
+                    "leftValue": "={{ $('SETTA-INFOS').item.json.dados.imagem }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IMAGEM"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a6f69cd7-2e44-46ff-94a4-c5f86f4328f4",
+                    "leftValue": "={{ $('SETTA-INFOS').item.json.dados.arquivo }}",
+                    "rightValue": "=",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ARQUIVO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1616,
+        880
+      ],
+      "id": "4e2be3a9-e240-4d4d-b8ef-ee41bfca3aa9",
+      "name": "TIPO-MSG"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('SETTA-INFOS').item.json.dados.audio }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        896
+      ],
+      "id": "603eea49-2b10-471b-a577-7a9533b18101",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.z-api.io/instances/3DFE00368522E024CF484E20A388CB1E/token/C0155F540E029B41BC6C953A/send-text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "client-token",
+              "value": "=F32dabd8b54ab42ba82ceefd511b19d4bS"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $('SETTA-INFOS').item.json.dados.telefone }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c27e2549-3b5c-42d8-be69-cd316891e454",
+      "name": "Envia TEXTO | Z-Api",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2368,
+        1248
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5630a54-9e6e-4db1-a777-cc3d9c5ee041",
+              "name": "MENSAGEM-IMAGEM",
+              "value": "=Mandei uma imagem que contem: {{ $json.text }}\n\nLegenda: {{ $('Webhook').item.json.body.image.caption }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        1312
+      ],
+      "id": "35302201-c2b4-4313-9670-9f5dec6460c2",
+      "name": "LEGENDA"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {}
+      },
+      "id": "f707592e-7479-48eb-9a4a-5df55eaf2eca",
+      "name": "LLM Image",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -640,
+        1504
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "2sZ5IU2zJTARWlUB",
+          "name": "SDR OPENAI KEY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is an image sent by the user. Describe the image and transcribe any text visible in the image. Put in as much detail as possible. In pt-BR always.",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "messageType": "imageBinary"
+            }
+          ]
+        }
+      },
+      "id": "789cc91b-01cf-46a1-9cf6-ad31840f9b6a",
+      "name": "Image Explainer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        -640,
+        1312
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $('SETTA-INFOS').item.json.dados.imagem }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        1312
+      ],
+      "id": "f8703312-4d1d-4576-8525-f90af79de824",
+      "name": "PEGA-IMAGEM"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62f70fdc-f1fd-49a8-b4ee-c4f339b3329d",
+              "name": "audio-texto",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        896
+      ],
+      "id": "e7e324a3-2e9c-468c-aa50-a8337772f623",
+      "name": "TEXTO-DO-AUDIO"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a866ef2a-bc54-4b3e-a5d4-ffc618f87944",
+              "leftValue": "={{ $json.dados.fromMe }}",
+              "rightValue": "={{ $json.dados.numeroSDR }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "13d7d7b1-ff06-4213-8127-12efc827ba38",
+              "leftValue": "={{ $json.dados.fromapi }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3152,
+        944
+      ],
+      "id": "00c86606-e131-4879-9dc0-5ef21fa5a83e",
+      "name": "MSG-BOT?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2944,
+        752
+      ],
+      "id": "74b681bc-7371-44c5-b259-3dcba52a4c57",
+      "name": "FAZ-NADA"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2640,
+        1152
+      ],
+      "id": "c337addf-eb03-4adb-9b4e-917b1316f843",
+      "name": "FAZ-NADA1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "56bba016-f65c-4c9e-9400-d19e55351f0f",
+              "leftValue": "={{ $('SETTA-INFOS').item.json.dados.fromapi }}",
+              "rightValue": "={{ $('SETTA-INFOS').item.json.dados.numeroSDR }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2944,
+        960
+      ],
+      "id": "ae5269fc-71eb-4b4d-8c1f-16cb7368695a",
+      "name": "VEIO-DA-API?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=MENSAGEM DO LEAD: {{ $('MSG').item.json.messages }}\n\nINFORMAÇÕES DO LEAD\nETAPA DO LEAD: {{ $json['Status Atendimento'] }}",
+        "options": {
+          "systemMessage": "=<PERSONA> \nVocê é um agente de atendimento inicial de pré-vendas da **ARV Systems**, especializada em **automação industrial sob medida**. Seu papel é conduzir um primeiro contato consultivo, **identificar o perfil do contato**, **coletar informações relevantes**, **entender a dor do cliente** e **registrar os dados no CRM** para que a equipe continue o processo comercial.\n\n<INSTRUÇÕES>\n- Sempre mantenha um tom consultivo, profissional e natural.\nUtilize no máximo 2 emojis por mensagem.\n- Faça uma pergunta por vez e aguarde a resposta antes de prosseguir.\n- Não crie mensagens muito grandes, tente ser o mais conciso, mas sem perder o aspecto consultivo.\n- O usuário pode responder por texto, áudio ou imagem (nunca vídeo).\n- Se o lead estiver interessado em vender produtos ou serviços, envie o link do formulário de fornecedores: 👉 https://forms.monday.com/forms/83be8a0c09d0aea79abfd49bebdd4c28?r=use1 \n- Se o lead estiver interessado em trabalhar na ARV, envie o link do formulário de candidatos: 👉 👉 https://forms.monday.com/forms/bb24d09590cb500ebf2f8b45649b6bae?r=use1\n- Não agradeça muitas vezes o lead para não ficar repetitivo e robótico de mais.\n\n<REGRAS (flexíveis, dependem do contexto)>\n- Se for fornecedor ou candidato, apenas direcione para o formulário correspondente e encerre.\n- Se a cidade não for reconhecida → peça complemento (cidade + estado), mas não insista mais de uma vez.\n- Deixe claro para o usuário que ele está falandoc com uma IA (apenas o alerte).\n\n<REGRAS ABSOLUTAS (linha vermelha, nunca quebrar)>\n- Se o contato já chegar com uma intenção clara do contato, informando dados como nome, empresa, da onde fala, capte as informações, armazenem e adapte a triagem para perguntar dados que não foram mencionados anteriormente.\n- CASO VOCE JÁ TENHA AS INFORMAÇÕES DO LEAD, NÃO REPITA AS PERGUNTAS PARA DADOS QUE VOCE JÁ POSSUI.\n- JAMAIS esqueça de cadastrar o lead após a coleta da ETAPA 1 (último dado é o e-mail).\n- LONG-MEMORY (OBRIGATÓRIO):\n- Sempre registrar nova informação relevante (dados de operação, dados da demanda, informações complementares sobre o lead, descrição de processos etc).\n- A cada 3 interações, *obrigatoriamente* chamar Memory Long para atualizar o histórico.\n- Nunca repita palavra por palavra a fala do lead.\n- Nunca invente contatos da arv systems que não existem.\n- Não fique dizendo \"só mais um dado\" ou \"uma última coisa\", enquanto não for a última pergunta da identificação e coleta inicial\n- Não esquecer jamais de coletar o NOME DA EMPRESA que está falando com você. \n \nETAPA 1 – Identificação & Coleta Inicial\n<APRESENTAÇÃO INICIAL>\n1. \"Olá! Tudo bem? 😊\nSou o assistente virtual de pré-vendas da ARV Systems e estou aqui para entender melhor o seu perfil e identificar como podemos te ajudar.\nAntes de começarmos, só preciso confirmar rapidinho o motivo do seu contato:\n\n(1) Automação Industrial (linhas, máquinas especiais, robôs, etc.)\n(2) Serviços Técnicos (retrofit, assistência, manutenção, upgrades)\n(3) Revenda Técnica (sensores, CLPs, inversores, componentes)\n(4) Gostaria de vender produtos ou serviços\n(5) Gostaria de trabalhar na ARV\n\n2. De forma resumida, qual é a sua necessidade ou desafio hoje, se quiser, pode me responder por áudio!\n\n3. Nome completo\n\n4. Nome da empresa\n\n5. CNPJ\n\n9. Cidade/Estado → PROCURA_CIDADE\n\n10. E-mail \n\nAo finalizar a coleta de todos os dados da ETAPA 1:\n- Acione a função `CRIAR-LEAD` uma única vez para criar o lead no CRM e atualizar o banco de dados.\n\nETAPA 3\n\"(Nome), agradecemos muito por compartilhar todas essas informações conosco! 🙌\nSeus dados já foram registrados e enviados ao nosso time de pré-vendas, que dará continuidade ao atendimento.\"\n\nETAPA 3 – FORNECEDOR\n\n\"(Nome), agradecemos pelo interesse em ser parceiro da ARV SYSTEMS! 🤝\nSeu cadastro foi encaminhado ao nosso time de compras, que fará a análise e retornará com um posicionamento o quanto antes.\"\n\nETAPA 3 – CANDIDATO\n\n\"(Nome), muito obrigado por se candidatar a fazer parte da ARV SYSTEMS! 🙌\nRecebemos suas informações e nosso time de RH irá analisá-las com atenção.\nEm breve, entraremos em contato para dar continuidade ao processo seletivo.\"\n\n\n<TOOLS DISPONÍVEIS>\n\nCRIAR-LEAD → criar lead ao final da ETAPA 1.\n\nLONG-MEMORY → Registra informações importantes sobre o lead.\n\nPROCURA_CIDADE → validar localidade."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        1232
+      ],
+      "id": "4099540c-a4b6-42ed-a6d5-e4995cf040d1",
+      "name": "AGENTE SDR ARV"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        1200
+      ],
+      "id": "512fa8a6-567d-47cd-8a3a-6641728d7520",
+      "name": "FAZ-NADA-2"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Acesse a base de dados da ARV SYSTEMS para fornecer enriquecer a demanda do lead",
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1952,
+        1696
+      ],
+      "id": "879a26d6-7583-4707-a011-b1ea5585ebbb",
+      "name": "knowledge_base",
+      "credentials": {
+        "postgres": {
+          "id": "QyB1vH2SRxUbyQHA",
+          "name": "BASE DE CONHECIMENTO SDR"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2cf9a829-5f61-4be6-ab6a-7b7798b1afe3",
+                    "leftValue": "={{ $json['Atendimento Humano'] }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ATENDIMENTO HUMANO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c754906d-f2bb-4fa5-935e-a76466f73f0b",
+                    "leftValue": "={{ $('PROCURA CONTATO').item.json['Status Atendimento'] }}",
+                    "rightValue": "ETAPA 1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ETAPA 1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "79cbe3a7-ddfb-40c7-98e4-080695d209a5",
+                    "leftValue": "={{ $('PROCURA CONTATO').item.json['Status Atendimento'] }}",
+                    "rightValue": "ETAPA 2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ETAPA 2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "342061c3-466b-4488-93c2-312b8a1c7ec4",
+                    "leftValue": "={{ $('PROCURA CONTATO').item.json['Status Atendimento'] }}",
+                    "rightValue": "ETAPA 3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ETAPA 3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6ce0a280-f7a0-46d2-9e18-f2e36854614c",
+                    "leftValue": "={{ $('PROCURA CONTATO').item.json['Status Atendimento'] }}",
+                    "rightValue": "ETAPA 3 - CANDIDATO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CANDIDATO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6dae40be-1195-4137-850f-5114ef2f6208",
+                    "leftValue": "={{ $('PROCURA CONTATO').item.json['Status Atendimento'] }}",
+                    "rightValue": "ETAPA 3 - FORNECEDOR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "FORNECEDOR"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        432,
+        1184
+      ],
+      "id": "b8180ec9-7893-4b60-a773-f762c75b9ff9",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2d05994a-7b41-4bbc-a782-ed691c7142f1",
+              "leftValue": "={{ $json.body.phone }}",
+              "rightValue": "5511974052313",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -4000,
+        944
+      ],
+      "id": "7b40ab99-0b44-4abd-a011-a9b7134df9a6",
+      "name": "TEST-FROM-ME?",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "24765738-6132-4137-92b0-c0a7f586be96",
+              "leftValue": "={{ $json.dados.telefone }}",
+              "rightValue": "511957749692",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "20a417cb-11c6-4f94-9fa6-17bf13bdc293",
+              "leftValue": "={{ $json.dados.telefone }}",
+              "rightValue": "5511997297766",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "158ac03b-1644-4a0b-a8c2-44a7e42870f6",
+              "leftValue": "={{ $json.dados.telefone }}",
+              "rightValue": "5511957749692",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -3360,
+        944
+      ],
+      "id": "01bd50e2-1f49-409d-95ea-4ad0073da92c",
+      "name": "COLABORADOR ARV?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aede86cd-a80e-4598-83dc-203998cd4a43",
+              "leftValue": "={{ $json.dados.isGroup }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -3584,
+        944
+      ],
+      "id": "80f10daa-e199-4af4-8498-413eaa6c9075",
+      "name": "FROM-GROUP?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3b9f5aa-04e6-44f4-9aff-7445a8eacb8f",
+              "name": "dados.telefone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "54e1bd8f-0495-40af-9001-c1f8d4d77094",
+              "name": "dados.chatName",
+              "value": "={{ $json.body.senderName }}",
+              "type": "string"
+            },
+            {
+              "id": "573c067b-eec0-481d-ba81-102c220e6802",
+              "name": "dados.chatid",
+              "value": "={{ $json.body.chatLid }}",
+              "type": "string"
+            },
+            {
+              "id": "5636dd7b-d7a9-4e1e-908f-97c4770eafd7",
+              "name": "dados.messageId",
+              "value": "={{ $json.body.messageId }}",
+              "type": "string"
+            },
+            {
+              "id": "93a5dead-d593-4c84-a40b-4720080dfa1e",
+              "name": "dados.isGroup",
+              "value": "={{ $json.body.isGroup }}",
+              "type": "boolean"
+            },
+            {
+              "id": "f57154fa-4213-4999-bc65-900f4797b9b3",
+              "name": "dados.fromMe",
+              "value": "={{ $json.body.fromMe }}",
+              "type": "boolean"
+            },
+            {
+              "id": "f39fcbc9-1634-42d0-90bb-cc1e1f44f17e",
+              "name": "dados.fromapi",
+              "value": "={{ $json.body.fromApi }}",
+              "type": "boolean"
+            },
+            {
+              "id": "b3e2d55d-87c2-4367-9287-96afe1f64783",
+              "name": "dados.message",
+              "value": "={{ $json.body.text.message }}",
+              "type": "string"
+            },
+            {
+              "id": "33b4520f-da66-429c-8b11-517804795e43",
+              "name": "dados.timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0aaeeb14-1fbd-4cf3-a886-9cf9f78501f3",
+              "name": "dados.audio",
+              "value": "={{ $json.body.audio.audioUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "ab0e91c8-0c08-492b-8e4e-b8f35c7e8baf",
+              "name": "dados.imagem",
+              "value": "={{ $json.body.image.imageUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "8145912f-6f80-4432-8821-0d4531c91260",
+              "name": "dados.numeroSDR",
+              "value": "5511930982965",
+              "type": "string"
+            },
+            {
+              "id": "20c2bad3-5099-4035-93b7-48902e0c8bca",
+              "name": "dados.arquivo",
+              "value": "={{ $('Webhook').item.json.body.document.documentUrl }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3808,
+        944
+      ],
+      "id": "d40c9983-473f-4d1a-836c-8a85184a7761",
+      "name": "SETTA-INFOS"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zapi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -4176,
+        944
+      ],
+      "id": "afded0af-01c1-44d6-a0b6-674194717290",
+      "name": "Webhook",
+      "webhookId": "37fa7691-e040-4381-b4bc-f8abe732cf9f"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('SETTA-INFOS').item.json.dados.arquivo }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -704,
+        1824
+      ],
+      "id": "9e474a14-77e3-471b-a3b3-6ed9ed06893e",
+      "name": "PEGA-IMAGEM1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        1824
+      ],
+      "id": "b46e8a62-b144-44da-882c-bcba8a53554c",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Você uma ia responsável por descrever o conteúdo do pdf enviado pelo contato no whatsapp.\n\nVocê irá receber o text do arquivo enviado pelo contato e deve explicar do que se trata aquele pdf, para assim, a ia principal poder compreender e identificar do que se trata.\n\nEnvie SOMENTE o descritivo.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -224,
+        1824
+      ],
+      "id": "195bec6a-f8b9-4a78-b98a-0b9d8dae0297",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2sZ5IU2zJTARWlUB",
+          "name": "SDR OPENAI KEY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('SETTA-INFOS').item.json.dados.arquivo }}",
+                    "rightValue": ".pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "d4edb18d-7189-4e73-b0ac-dbb1476b0f43"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -976,
+        1824
+      ],
+      "id": "44b446e5-5e7f-40fa-8c18-c4c3e0554bc7",
+      "name": "TIPO-ARQUIVO"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c42c3040-87ce-4e29-a225-bc66afa3214d",
+              "name": "DESCRITIVO_PDF",
+              "value": "={{ $json.message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        128,
+        1824
+      ],
+      "id": "56ed0996-ec41-490a-ba62-bfb97d459024",
+      "name": "DESCRITIVO"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "=messages",
+        "key": "={{ $('NUMERO-TEXT').item.json.NORMALIZACAO['NUMERO-LEAD'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        256
+      ],
+      "id": "19c9c4ed-666d-434e-96e0-bd20ae0eadc3",
+      "name": "OBTEM MSG",
+      "alwaysOutputData": false,
+      "credentials": {
+        "redis": {
+          "id": "79KYHzFBfsq2jAZ2",
+          "name": "ARV CHATBOT REDIS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "databaseId": 98,
+        "tableId": 519,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 5072,
+              "fieldValue": "={{ $('SETTA-INFOS').item.json.dados.telefone }}"
+            },
+            {
+              "fieldId": 5079,
+              "fieldValue": "ETAPA 1"
+            },
+            {
+              "fieldId": 5077,
+              "fieldValue": "={{ $('SETTA-INFOS').item.json.dados.chatName }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        528
+      ],
+      "id": "520e45f3-ba37-45ff-b57c-8b89099d23f8",
+      "name": "CRIA-CONTATO",
+      "credentials": {
+        "baserowApi": {
+          "id": "UNzDmQtoqZFSeIc6",
+          "name": "BASEROW"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "databaseId": 98,
+        "tableId": 519,
+        "limit": 1,
+        "additionalOptions": {
+          "search": "={{ $('SETTA-INFOS').item.json.dados.telefone }}"
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        816,
+        256
+      ],
+      "id": "e7fbad08-b1e0-4eee-8211-24fc7ebf489b",
+      "name": "PROCURA CONTATO",
+      "alwaysOutputData": true,
+      "credentials": {
+        "baserowApi": {
+          "id": "UNzDmQtoqZFSeIc6",
+          "name": "BASEROW"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "databaseId": 98,
+        "tableId": 519,
+        "rowId": "={{ $json.id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 5081,
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        880,
+        1232
+      ],
+      "id": "97bee897-077c-4460-939c-033cf69b74b8",
+      "name": "ATUALIZA-INTERACAO",
+      "credentials": {
+        "baserowApi": {
+          "id": "UNzDmQtoqZFSeIc6",
+          "name": "BASEROW"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Chame essa tool ao finalizar a coleta de todos os dados do lead.",
+        "workflowId": {
+          "__rl": true,
+          "value": "4kuLILXL0yyNOWia",
+          "mode": "list",
+          "cachedResultName": "SW -> CRIA_LEAD_CRM"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "LeadID": "={{ $('SETTA-INFOS').item.json.dados.telefone }}",
+            "NomeCompleto": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('NomeCompleto', ``, 'string') }}",
+            "Empresa": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Empresa', ``, 'string') }}",
+            "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+            "Demanda": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Demanda', `Faça um breve resumo do que se trata a demanda do lead`, 'string') }}",
+            "CNPJ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('CNPJ', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "LeadID",
+              "displayName": "LeadID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "NomeCompleto",
+              "displayName": "NomeCompleto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "Localidade",
+              "displayName": "Localidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "Demanda",
+              "displayName": "Demanda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "CNPJ",
+              "displayName": "CNPJ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        1696
+      ],
+      "id": "e5282478-6923-4fa0-9219-4b9474597589",
+      "name": "CRIAR-LEAD"
+    },
+    {
+      "parameters": {
+        "description": "Chame essa tool quando precisar encaminhar o atendimento para um humano.",
+        "workflowId": {
+          "__rl": true,
+          "value": "XXnFblmF4EOC1JeZ",
+          "mode": "list",
+          "cachedResultName": "SW -> ATENDIMENTO HUMANO"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "telefone": "={{ $('SETTA-INFOS').item.json.dados.telefone }}",
+            "assunto": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('assunto', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "leadid"
+          ],
+          "schema": [
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "assunto",
+              "displayName": "assunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2288,
+        1712
+      ],
+      "id": "f66c2462-3205-404f-af3f-206c17a6af77",
+      "name": "ATENDIMENTO-HUMANO"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "databaseId": 98,
+        "tableId": 519,
+        "rowId": "={{ $('PROCURA CONTATO1').item.json.id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 5074,
+              "fieldValue": "=true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -1552,
+        1408
+      ],
+      "id": "80c6f4ff-2336-4262-8228-2405f5eec842",
+      "name": "ATUALIZA-ATENDIMENTO",
+      "retryOnFail": true,
+      "credentials": {
+        "baserowApi": {
+          "id": "UNzDmQtoqZFSeIc6",
+          "name": "BASEROW"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        1632
+      ],
+      "id": "8c67c2f4-2927-4bd7-98a9-1eb70d3238ca",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        944
+      ],
+      "id": "ba2f9c11-0df0-49a9-929d-6b58531ff7b3",
+      "name": "ATENDIMENTO HUMANO"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c03941a7-6601-4d19-9472-6405c1b48df8",
+      "name": "FAZ-NADA2"
+    },
+    {
+      "parameters": {
+        "description": "CHAME ESSA FERRAMENTA SEMPRE QUE QUISER SE LEMBRAR OU ARMAZENAR ALGUMA INFORMACAO DO LEAD",
+        "workflowId": {
+          "__rl": true,
+          "value": "ZQYZzJoUfIJLc7JS",
+          "mode": "list",
+          "cachedResultName": "SW -> SDR PRE VENDAS LONG MEMORY"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "dadosArmazenar": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('dadosArmazenar', `envie para cá os dados a serem armazenados`, 'string') }}",
+            "chatid": "={{ $('SETTA-INFOS').item.json.dados.telefone }}",
+            "ID-DB": "={{ $('SETTA-INFOS').item.json.dados.telefone }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "dadosArmazenar",
+              "displayName": "dadosArmazenar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "chatid",
+              "displayName": "chatid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "ID-DB",
+              "displayName": "ID-DB",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1552,
+        1696
+      ],
+      "id": "da23bba9-f75b-499e-a9d0-f01c7bb20785",
+      "name": "LONG-MEMORY"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('NUMERO-TEXT').item.json.NORMALIZACAO[\"NUMERO-LEAD\"] }}curta"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        1072,
+        1696
+      ],
+      "id": "b61f744f-83a3-42cf-aa5e-a5b6c74e792c",
+      "name": "SHORT-MEMORY",
+      "credentials": {
+        "redis": {
+          "id": "79KYHzFBfsq2jAZ2",
+          "name": "ARV CHATBOT REDIS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        1696
+      ],
+      "id": "14b3e685-189e-43c1-9422-e7b6ae7a148b",
+      "name": "LLM",
+      "credentials": {
+        "openAiApi": {
+          "id": "2sZ5IU2zJTARWlUB",
+          "name": "SDR OPENAI KEY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "75eadac9-af38-42bd-b7cd-17f24c218b02",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2096,
+        1264
+      ],
+      "id": "d8769bed-cb69-45a8-8489-fce8175fc282",
+      "name": "If4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1856,
+        1744
+      ],
+      "id": "8e61526d-c93d-4349-90f7-d895f1117934",
+      "name": "Wait4",
+      "webhookId": "3353b666-355a-4157-a28e-c3fa64c624d9"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "databaseId": 98,
+        "tableId": 519,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": 5072,
+              "fieldValue": "={{ $('SETTA-INFOS').item.json.dados.telefone }}"
+            },
+            {
+              "fieldId": 5079,
+              "fieldValue": "ETAPA 1"
+            },
+            {
+              "fieldId": 5077,
+              "fieldValue": "={{ $('SETTA-INFOS').item.json.dados.chatName }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        1520
+      ],
+      "id": "ffb9c57a-7ab0-4311-a601-67d7e766c2f2",
+      "name": "CRIA-CONTATO1",
+      "retryOnFail": true,
+      "credentials": {
+        "baserowApi": {
+          "id": "UNzDmQtoqZFSeIc6",
+          "name": "BASEROW"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "databaseId": 98,
+        "tableId": 519,
+        "limit": 1,
+        "additionalOptions": {
+          "search": "={{ $('SETTA-INFOS').item.json.dados.telefone }}"
+        }
+      },
+      "type": "n8n-nodes-base.baserow",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        1264
+      ],
+      "id": "147a1adf-18bc-410d-a8d5-9138e31861a5",
+      "name": "PROCURA CONTATO1",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "baserowApi": {
+          "id": "UNzDmQtoqZFSeIc6",
+          "name": "BASEROW"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f2e3f0d9-2856-4bae-877e-7193c10e5b71",
+              "leftValue": "={{ $json['Atendimento Humano'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1872,
+        1344
+      ],
+      "id": "d1872fb3-84f1-4b33-b607-8be1dcec8b4d",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "NUMERO-TEXT": {
+      "main": [
+        [
+          {
+            "node": "ENVIA PARA O BD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENVIA PARA O BD": {
+      "main": [
+        [
+          {
+            "node": "OBTEM MSG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TRANSCRICAO": {
+      "main": [
+        [
+          {
+            "node": "TEXTO-DO-AUDIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CRIA-CONTATO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "PROCURA CONTATO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Envia TEXTO | Z-Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SPLIT-OUTPUT": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "knowledge_base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "FAZ-NADA2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "OBTEM MSG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MSG": {
+      "main": [
+        [
+          {
+            "node": "PROCURA CONTATO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis2": {
+      "main": [
+        [
+          {
+            "node": "MSG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PROCURA_CIDADE": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENTE SDR ARV",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MINHA MSG?": {
+      "main": [
+        [
+          {
+            "node": "PEGA_CHATID_BLOCK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PROCURA CONTATO1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PEGA_CHATID_BLOCK": {
+      "main": [
+        [
+          {
+            "node": "SE ESTIVER VAZIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SE ESTIVER VAZIO": {
+      "main": [
+        [
+          {
+            "node": "TIPO-MSG",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FAZ-NADA-2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TIPO-MSG": {
+      "main": [
+        [
+          {
+            "node": "NUMERO-TEXT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PEGA-IMAGEM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TIPO-ARQUIVO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "TRANSCRICAO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia TEXTO | Z-Api": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LEGENDA": {
+      "main": [
+        [
+          {
+            "node": "NUMERO-TEXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Image": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Image Explainer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Explainer": {
+      "main": [
+        [
+          {
+            "node": "LEGENDA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PEGA-IMAGEM": {
+      "main": [
+        [
+          {
+            "node": "Image Explainer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEXTO-DO-AUDIO": {
+      "main": [
+        [
+          {
+            "node": "NUMERO-TEXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MSG-BOT?": {
+      "main": [
+        [
+          {
+            "node": "FAZ-NADA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "VEIO-DA-API?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VEIO-DA-API?": {
+      "main": [
+        [
+          {
+            "node": "MINHA MSG?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FAZ-NADA1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENTE SDR ARV": {
+      "main": [
+        [
+          {
+            "node": "SPLIT-OUTPUT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "knowledge_base": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "ATENDIMENTO HUMANO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ATUALIZA-INTERACAO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ATUALIZA-INTERACAO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ATUALIZA-INTERACAO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ATUALIZA-INTERACAO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ATUALIZA-INTERACAO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST-FROM-ME?": {
+      "main": [
+        [
+          {
+            "node": "SETTA-INFOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "COLABORADOR ARV?": {
+      "main": [
+        [
+          {
+            "node": "MSG-BOT?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FROM-GROUP?": {
+      "main": [
+        [
+          {
+            "node": "COLABORADOR ARV?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SETTA-INFOS": {
+      "main": [
+        [
+          {
+            "node": "FROM-GROUP?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "TEST-FROM-ME?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PEGA-IMAGEM1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "DESCRITIVO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TIPO-ARQUIVO": {
+      "main": [
+        [
+          {
+            "node": "PEGA-IMAGEM1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DESCRITIVO": {
+      "main": [
+        [
+          {
+            "node": "NUMERO-TEXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OBTEM MSG": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIA-CONTATO": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PROCURA CONTATO": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ATUALIZA-INTERACAO": {
+      "main": [
+        [
+          {
+            "node": "AGENTE SDR ARV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR-LEAD": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENTE SDR ARV",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ATENDIMENTO-HUMANO": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "ATUALIZA-ATENDIMENTO": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LONG-MEMORY": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENTE SDR ARV",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SHORT-MEMORY": {
+      "ai_memory": [
+        [
+          {
+            "node": "AGENTE SDR ARV",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AGENTE SDR ARV",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CRIA-CONTATO1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "PROCURA CONTATO1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIA-CONTATO1": {
+      "main": [
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PROCURA CONTATO1": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "FAZ-NADA-2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ATUALIZA-ATENDIMENTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d829b902-211d-477e-bd37-89855d693a11",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "33738330930e3881dd5571eca013f36ddf8aab20e4ea5c1f2ebaf4a2b4668ac6"
+  },
+  "id": "Cyl9ba1G0wUUzLSj",
+  "tags": [
+    {
+      "updatedAt": "2026-01-19T18:30:03.619Z",
+      "createdAt": "2026-01-19T18:30:03.619Z",
+      "id": "9vrZlKBTwUZe2CnH",
+      "name": "CHATBOT ARV"
+    }
+  ]
+}

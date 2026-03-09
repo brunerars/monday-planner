@@ -1,0 +1,126 @@
+name: CI/CD — monday-planner
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API:      ghcr.io/${{ github.repository_owner }}/monday-planner
+  IMAGE_FRONTEND: ghcr.io/${{ github.repository_owner }}/monday-planner-frontend
+
+concurrency:
+  group: deploy-monday-planner-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      short_sha: ${{ steps.meta.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-buildx-
+
+      - uses: docker/setup-buildx-action@v3
+
+      # ── Backend ──────────────────────────────────────────────
+      - name: Build & push API
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_API }}:${{ steps.meta.outputs.short_sha }}
+            ${{ env.IMAGE_API }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      # ── Frontend ─────────────────────────────────────────────
+      - name: Build & push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: true
+          tags: |
+            ${{ env.IMAGE_FRONTEND }}:${{ steps.meta.outputs.short_sha }}
+            ${{ env.IMAGE_FRONTEND }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  deploy:
+    name: Deploy na VPS
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Validar secrets
+        run: |
+          [ -z "${{ secrets.VPS_HOST }}" ] && echo "VPS_HOST ausente" && exit 1
+          [ -z "${{ secrets.VPS_USER }}" ] && echo "VPS_USER ausente" && exit 1
+          [ -z "${{ secrets.VPS_SSH_KEY }}" ] && echo "VPS_SSH_KEY ausente" && exit 1
+          echo "Secrets OK"
+
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 5m
+          script: |
+            set -e
+            echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            docker pull "${{ env.IMAGE_API }}:latest"
+            docker pull "${{ env.IMAGE_FRONTEND }}:latest"
+
+            # Atualiza API
+            API_SERVICE="monday-planner_api"
+            if ! docker service inspect "${API_SERVICE}" >/dev/null 2>&1; then
+              echo "Servico ${API_SERVICE} nao encontrado. Crie a stack no Portainer primeiro."
+              docker service ls && exit 1
+            fi
+            docker service update \
+              --image "${{ env.IMAGE_API }}:latest" \
+              --with-registry-auth --force "${API_SERVICE}"
+
+            # Atualiza Frontend
+            FE_SERVICE="monday-planner_frontend"
+            if ! docker service inspect "${FE_SERVICE}" >/dev/null 2>&1; then
+              echo "Servico ${FE_SERVICE} nao encontrado. Crie a stack no Portainer primeiro."
+              docker service ls && exit 1
+            fi
+            docker service update \
+              --image "${{ env.IMAGE_FRONTEND }}:latest" \
+              --with-registry-auth --force "${FE_SERVICE}"
+
+            docker image prune -f
+            echo "Deploy concluido! SHA: ${{ needs.build.outputs.short_sha }}"

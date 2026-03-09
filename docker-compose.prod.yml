@@ -1,0 +1,112 @@
+# Docker Compose para producao (Docker Swarm via Portainer)
+# Deploy: Portainer -> Stacks -> Add Stack -> colar este arquivo
+# NUNCA expoe portas do DB ou Redis para fora da rede interna
+# Variaveis sensiveis: configurar como Environment Variables no Portainer
+
+version: "3.8"
+
+services:
+
+  api:
+    image: ${IMAGE:-ghcr.io/brunerars/monday-planner:latest}
+    networks:
+      - network_public
+      - internal
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.mondayplanner.rule=Host(`planner.arvsystems.cloud`)
+        - traefik.http.routers.mondayplanner.entrypoints=websecure
+        - traefik.http.routers.mondayplanner.tls.certresolver=letsencryptresolver
+        - traefik.http.services.mondayplanner.loadbalancer.server.port=8000
+        - traefik.http.routers.mondayplanner.service=mondayplanner
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-20250514}
+      - MAKE_WEBHOOK_URL=${MAKE_WEBHOOK_URL}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - API_BASE_URL=${API_BASE_URL:-https://planner.arvsystems.cloud}
+      - CTA_CALENDLY_URL=${CTA_CALENDLY_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://planner.arvsystems.cloud}
+      - ENVIRONMENT=production
+      - LOG_LEVEL=info
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/brunerars/monday-planner-frontend:latest}
+    networks:
+      - network_public
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      labels:
+        - traefik.enable=true
+        # Rotas do frontend: tudo que NÃO for /api, /docs, /redoc, /health, /openapi
+        - traefik.http.routers.mondayplanner-web.rule=Host(`planner.arvsystems.cloud`) && !PathPrefix(`/api`) && !PathPrefix(`/docs`) && !PathPrefix(`/redoc`) && !PathPrefix(`/health`) && !PathPrefix(`/openapi.json`)
+        - traefik.http.routers.mondayplanner-web.entrypoints=websecure
+        - traefik.http.routers.mondayplanner-web.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.mondayplanner-web.priority=1
+        - traefik.http.services.mondayplanner-web.loadbalancer.server.port=80
+        - traefik.http.routers.mondayplanner-web.service=mondayplanner-web
+        # Backend tem prioridade maior nas rotas da API
+        - traefik.http.routers.mondayplanner.priority=10
+
+  db:
+    image: postgres:16-alpine
+    networks:
+      - internal
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-mondayplanner}
+      - POSTGRES_USER=${POSTGRES_USER:-mondayplanner}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - internal
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - redis_data:/data
+
+networks:
+  network_public:
+    external: true
+  internal:
+    driver: overlay
+    attachable: false
+
+volumes:
+  pg_data:
+  redis_data:

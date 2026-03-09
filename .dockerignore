@@ -1,0 +1,57 @@
+# Controle de versao
+.git
+.gitignore
+
+# Variaveis de ambiente (NUNCA incluir no build)
+.env
+.env.*
+!.env.example
+
+# Dependencias locais (reinstaladas no build)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+mondayplanner/**/__pycache__/
+mondayplanner/**/*.pyc
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Testes e ferramentas de dev
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# CI/CD e docs
+.github/
+*.md
+!mondayplanner/README.md
+
+# Compose files de dev (nao necessarios na imagem)
+docker-compose.yml
+docker-compose.prod.yml
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporarios
+*.tmp
+*.bak

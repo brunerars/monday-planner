@@ -1,0 +1,75 @@
+# Docker Compose para desenvolvimento local
+# NAO usar em producao — use docker-compose.prod.yml via Portainer
+# Para o frontend: cd projeto/frontend && npm run dev  (roda separado, porta 5173)
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://mondayplanner:mondayplanner@db:5432/mondayplanner
+      - REDIS_URL=redis://redis:6379/0
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-20250514}
+      - MAKE_WEBHOOK_URL=${MAKE_WEBHOOK_URL:-}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:-}
+      - API_BASE_URL=${API_BASE_URL:-http://localhost:8000}
+      - CTA_CALENDLY_URL=${CTA_CALENDLY_URL:-https://calendly.com/seulink/mondayplanner}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./projeto/backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=mondayplanner
+      - POSTGRES_USER=mondayplanner
+      - POSTGRES_PASSWORD=mondayplanner
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mondayplanner -d mondayplanner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  pg_data:
+  redis_data:
