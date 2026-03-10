@@ -21,6 +21,7 @@ export default function ChatPage() {
   const [msgsUsed, setMsgsUsed]     = useState(0)
   const [msgsRemaining, setMsgsRemaining] = useState(0)
   const [input, setInput]           = useState('')
+  const [showModal, setShowModal]   = useState(false)
 
   const messagesEndRef = useRef(null)
   const inputRef       = useRef(null)
@@ -211,6 +212,14 @@ export default function ChatPage() {
     }
   }
 
+  function handleGeneratePlan() {
+    if (msgsUsed < 8) {
+      setShowModal(true)
+    } else {
+      handleEndSession()
+    }
+  }
+
   function navigateToPlan(pollUrl) {
     // pollUrl is like "/api/v1/plans/status/{plan_id}"
     const planId = pollUrl.split('/').pop()
@@ -264,7 +273,7 @@ export default function ChatPage() {
         <div className="chat-loading">
           <span className="material-icons" style={{ fontSize: 48, color: 'var(--monday-red)' }}>error_outline</span>
           <p className="chat-loading-text">{error}</p>
-          <Link to="/form" className="btn-primary" style={{ marginTop: '1rem', fontSize: 'var(--text-sm)' }}>
+          <Link to="/form" className="btn btn-primary" style={{ marginTop: '1rem', fontSize: 'var(--text-sm)' }}>
             Voltar ao formulário
           </Link>
         </div>
@@ -284,6 +293,17 @@ export default function ChatPage() {
           </div>
         </div>
         <div className="chat-header-right">
+          {!ended && config?.cta_calendly_url && (
+            <a
+              className="chat-calendly-btn"
+              href={config.cta_calendly_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="material-icons">event</span>
+              <span>Agendar call</span>
+            </a>
+          )}
           {!ended && (
             <span className="chat-msg-counter">
               {msgsRemaining > 0
@@ -295,7 +315,7 @@ export default function ChatPage() {
           {!ended && (
             <button
               className="chat-end-btn"
-              onClick={handleEndSession}
+              onClick={handleGeneratePlan}
               disabled={ending || msgsUsed < 4}
               title={msgsUsed < 4 ? 'Converse um pouco mais antes de gerar o plano' : 'Encerrar e gerar planejamento'}
             >
@@ -383,6 +403,33 @@ export default function ChatPage() {
           </div>
         )}
       </div>
+
+      {/* Confirmation modal for early plan generation */}
+      {showModal && (
+        <div className="chat-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="chat-modal" onClick={e => e.stopPropagation()}>
+            <h3 className="chat-modal-title">Gerar plano agora?</h3>
+            <p className="chat-modal-text">
+              Com poucas mensagens trocadas, o planejamento gerado pode ser mais superficial.
+              Quanto mais contexto sobre sua operacao, melhor o resultado.
+            </p>
+            <div className="chat-modal-actions">
+              <button
+                className="chat-modal-btn chat-modal-btn--secondary"
+                onClick={() => setShowModal(false)}
+              >
+                Continuar conversando
+              </button>
+              <button
+                className="chat-modal-btn chat-modal-btn--primary"
+                onClick={() => { setShowModal(false); handleEndSession() }}
+              >
+                Gerar mesmo assim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

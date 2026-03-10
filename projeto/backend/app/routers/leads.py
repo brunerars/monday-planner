@@ -37,6 +37,15 @@ async def create_partial_lead(data: PartialLeadCreate):
 
 
 @router.get(
+    "/leads",
+    response_model=list[LeadResponse],
+    summary="Listar todos os leads",
+)
+async def list_leads(db: AsyncSession = Depends(get_db)):
+    return await lead_service.get_all_leads(db)
+
+
+@router.get(
     "/leads/{lead_id}",
     response_model=LeadDetail,
     summary="Buscar lead por ID",

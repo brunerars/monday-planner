@@ -79,11 +79,14 @@ export default function FormPage() {
   const sendPartial = useCallback(() => {
     if (step < 3 || !data.email) return
     const payload = JSON.stringify({
-      empresa:       data.empresa,
-      segmento:      data.segmento,
-      tipo_negocio:  data.tipo_negocio,
-      email:         data.email,
-      nome_contato:  data.nome_contato,
+      step_completed: step,
+      data: {
+        empresa:       data.empresa,
+        segmento:      data.segmento,
+        tipo_negocio:  data.tipo_negocio,
+        email:         data.email,
+        nome_contato:  data.nome_contato,
+      },
     })
     navigator.sendBeacon('/api/v1/leads/partial', new Blob([payload], { type: 'application/json' }))
   }, [step, data])
@@ -189,17 +192,17 @@ export default function FormPage() {
 
             <div style={{ display: 'flex', gap: '.75rem' }}>
               {step > 1 && (
-                <button type="button" className="btn-ghost" onClick={handleBack} disabled={submitting}>
+                <button type="button" className="btn btn-ghost" onClick={handleBack} disabled={submitting}>
                   Voltar
                 </button>
               )}
 
               {step < TOTAL_STEPS ? (
-                <button type="button" className="btn-primary" onClick={handleNext}>
+                <button type="button" className="btn btn-primary" onClick={handleNext}>
                   Continuar
                 </button>
               ) : (
-                <button type="submit" className="btn-primary" disabled={submitting}>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
                   {submitting
                     ? <><span className="material-icons form-spin" style={{ fontSize: 18, verticalAlign: 'middle', marginRight: '.4em' }}>autorenew</span>Enviando…</>
                     : 'Gerar meu planejamento'

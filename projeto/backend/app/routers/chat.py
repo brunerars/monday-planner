@@ -8,11 +8,14 @@ GET  /chat/history/{id} → histórico completo de mensagens
 """
 import uuid
 
+import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import app.services.agent_service as agent_service
 import app.services.plan_service as plan_service
+
+logger = structlog.get_logger()
 from app.config import settings
 from app.dependencies import get_db
 from app.schemas.chat import (
@@ -89,6 +92,7 @@ async def start_chat(
             supports_image=False,
             supports_file=False,
             session_timeout_minutes=settings.agent_session_timeout_minutes,
+            cta_calendly_url=settings.cta_calendly_url,
         ),
     )
 
@@ -207,6 +211,12 @@ async def end_chat(
                 detail={"code": "SESSION_ALREADY_ENDED", "message": "Sessão já encerrada"},
             )
         raise HTTPException(status_code=500, detail={"code": "INTERNAL_ERROR", "message": code})
+    except Exception as exc:
+        logger.error("end_session_unexpected_error", error=str(exc), session_id=str(data.session_id))
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "INTERNAL_ERROR", "message": "Erro ao encerrar sessão"},
+        )
 
     plan_id = result["plan_id"]
     background_tasks.add_task(

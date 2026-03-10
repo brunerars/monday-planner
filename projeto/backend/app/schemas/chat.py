@@ -15,6 +15,7 @@ class ChatConfig(BaseModel):
     supports_image: bool = False
     supports_file: bool = False
     session_timeout_minutes: int
+    cta_calendly_url: str = ""
 
 
 class ChatStartResponse(BaseModel):

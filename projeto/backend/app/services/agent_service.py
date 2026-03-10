@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.context import ContextManager
 from app.agent.guardrails import GuardrailsChecker
-from app.agent.prompts import FINAL_NOTE, PENULTIMATE_NOTE, build_system_prompt
+from app.agent.prompts import FINAL_NOTE, PENULTIMATE_NOTE, build_message_counter_note, build_system_prompt
 from app.config import settings
 from app.models.chat_message import ChatMessage
 from app.models.chat_session import ChatSession
@@ -105,9 +105,9 @@ async def start_session(lead_id: uuid.UUID, db: AsyncSession) -> dict:
     result = await db.execute(
         select(ChatSession).where(
             ChatSession.lead_id == lead_id, ChatSession.status == "active"
-        )
+        ).order_by(ChatSession.started_at.desc())
     )
-    existing = result.scalar_one_or_none()
+    existing = result.scalars().first()
     if existing:
         raise ValueError(f"SESSION_ACTIVE:{existing.id}")
 
@@ -126,7 +126,7 @@ async def start_session(lead_id: uuid.UUID, db: AsyncSession) -> dict:
         messages=[
             {
                 "role": "user",
-                "content": "Olá! Quero entender melhor como o Monday.com pode ajudar nossa empresa.",
+                "content": "Oi, acabei de preencher o formulário.",
             }
         ],
         max_tokens=settings.agent_max_output_tokens,
@@ -213,6 +213,10 @@ async def process_message(
             messages[-1]["content"] += FINAL_NOTE
         elif is_penultimate_exchange:
             messages[-1]["content"] += PENULTIMATE_NOTE
+        else:
+            counter_note = build_message_counter_note(messages_after_user, settings.agent_max_messages)
+            if counter_note:
+                messages[-1]["content"] += counter_note
 
     # 7. Chama Claude API
     response_text = await _call_claude_with_retry(
@@ -303,7 +307,10 @@ async def end_session(session_id: uuid.UUID, db: AsyncSession) -> dict:
 
     await db.commit()
 
-    await _context_manager.invalidate_cache(session_id)
+    try:
+        await _context_manager.invalidate_cache(session_id)
+    except Exception as exc:
+        logger.warning("cache_invalidation_error", error=str(exc))
 
     logger.info("session_ended", session_id=str(session_id), plan_id=str(plan_id))
 

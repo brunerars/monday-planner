@@ -144,95 +144,200 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planejamento — {empresa}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {{
-    --brand: #0073ea;
-    --brand-dark: #0060c0;
-    --text: #1f2937;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --bg: #f9fafb;
+    --almost-black: #111;
+    --red: #c82a2a;
+    --red-dark: #a52222;
+    --text: #111;
+    --text-secondary: #555;
+    --muted: #888;
+    --border: #e5e5e5;
+    --bg: #f7f7f7;
+    --white: #fff;
   }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: var(--bg);
     color: var(--text);
     line-height: 1.7;
-    padding: 2rem 1rem;
+    padding: clamp(1rem, 4vw, 2.5rem) clamp(.75rem, 3vw, 1.5rem);
+  }}
+  .accent-bar {{
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), #6161ff);
+    z-index: 100;
   }}
   .wrapper {{
     max-width: 800px;
     margin: 0 auto;
-    background: #fff;
+    background: var(--white);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 3rem 3.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    border-radius: 16px;
+    padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 3.5rem);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.04);
   }}
   .badge {{
-    display: inline-block;
-    background: var(--brand);
-    color: #fff;
-    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: var(--almost-black);
+    color: var(--white);
+    font-size: .65rem;
     font-weight: 700;
-    letter-spacing: .05em;
+    letter-spacing: .08em;
     text-transform: uppercase;
-    padding: .25rem .75rem;
+    padding: .3rem .85rem;
     border-radius: 999px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.75rem;
   }}
-  h1 {{ font-size: 1.9rem; font-weight: 800; line-height: 1.25; margin-bottom: .5rem; }}
-  h2 {{ font-size: 1.25rem; font-weight: 700; margin: 2.5rem 0 .75rem; padding-bottom: .5rem; border-bottom: 2px solid var(--brand); color: var(--brand-dark); }}
-  h3 {{ font-size: 1rem; font-weight: 700; margin: 1.5rem 0 .5rem; }}
-  p {{ margin-bottom: 1rem; }}
+  .badge-dot {{
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+  }}
+  h1 {{
+    font-size: clamp(1.5rem, 4vw, 1.9rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -.03em;
+    margin-bottom: .5rem;
+    color: var(--almost-black);
+  }}
+  h2 {{
+    font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+    font-weight: 700;
+    margin: 2.5rem 0 .75rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid var(--almost-black);
+    color: var(--almost-black);
+  }}
+  h3 {{
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 1.5rem 0 .5rem;
+    color: var(--almost-black);
+  }}
+  p {{ margin-bottom: 1rem; color: var(--text-secondary); }}
   ul, ol {{ padding-left: 1.5rem; margin-bottom: 1rem; }}
-  li {{ margin-bottom: .35rem; }}
+  li {{ margin-bottom: .35rem; color: var(--text-secondary); }}
   hr {{ border: none; border-top: 1px solid var(--border); margin: 2rem 0; }}
-  strong {{ font-weight: 700; }}
-  code {{ background: #f3f4f6; padding: .15em .4em; border-radius: 4px; font-size: .88em; }}
-  blockquote {{ border-left: 4px solid var(--brand); padding-left: 1rem; color: var(--muted); margin: 1rem 0; }}
+  strong {{ font-weight: 700; color: var(--almost-black); }}
+  code {{
+    background: var(--bg);
+    padding: .15em .4em;
+    border-radius: 4px;
+    font-size: .88em;
+    border: 1px solid var(--border);
+  }}
+  blockquote {{
+    border-left: 3px solid var(--red);
+    padding-left: 1rem;
+    color: var(--muted);
+    margin: 1rem 0;
+  }}
+  table {{
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: .9rem;
+  }}
+  th, td {{
+    padding: .6rem .8rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }}
+  th {{
+    font-weight: 700;
+    color: var(--almost-black);
+    background: var(--bg);
+  }}
   .cta {{
     margin-top: 3rem;
-    padding: 2rem;
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
-    border-radius: 10px;
+    padding: 2.5rem 2rem;
+    background: var(--almost-black);
+    border-radius: 14px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
   }}
-  .cta p {{ margin-bottom: 1rem; font-size: 1.05rem; color: var(--text); }}
+  .cta::before {{
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(200,42,42,.15) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 80% 20%, rgba(97,97,255,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }}
+  .cta p {{
+    margin-bottom: 1.25rem;
+    font-size: 1.05rem;
+    color: rgba(255,255,255,.85);
+    position: relative;
+  }}
   .cta a {{
     display: inline-block;
-    background: var(--brand);
-    color: #fff;
+    background: var(--red);
+    color: var(--white);
+    font-family: "Inter Tight", sans-serif;
     font-weight: 700;
-    font-size: .95rem;
-    padding: .75rem 2rem;
-    border-radius: 8px;
+    font-size: .9rem;
+    padding: .8rem 2.25rem;
+    border-radius: 999px;
     text-decoration: none;
-    transition: background .2s;
+    transition: background .2s, transform .15s;
+    position: relative;
   }}
-  .cta a:hover {{ background: var(--brand-dark); }}
+  .cta a:hover {{
+    background: var(--red-dark);
+    transform: translateY(-1px);
+  }}
   .footer {{
     margin-top: 2.5rem;
-    font-size: .8rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: .75rem;
     color: var(--muted);
-    text-align: center;
+  }}
+  .footer-logo {{
+    font-weight: 800;
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--almost-black);
   }}
   @media (max-width: 600px) {{
-    .wrapper {{ padding: 2rem 1.5rem; }}
-    h1 {{ font-size: 1.5rem; }}
+    .wrapper {{ border-radius: 12px; }}
+    h1 {{ letter-spacing: -.02em; }}
+    .cta {{ padding: 2rem 1.25rem; }}
+    .footer {{ flex-direction: column; text-align: center; gap: .5rem; }}
   }}
 </style>
 </head>
 <body>
+<div class="accent-bar"></div>
 <div class="wrapper">
-  <span class="badge">MondayPlanner</span>
+  <span class="badge"><span class="badge-dot"></span> MondayPlanner</span>
   {content}
   <div class="cta">
-    <p>Pronto para dar o próximo passo?</p>
+    <p>Pronto para dar o pr&oacute;ximo passo?</p>
     <a href="{cta_url}" target="_blank" rel="noopener">Agendar call com especialista</a>
   </div>
-  <p class="footer">Planejamento gerado por MondayPlanner &middot; Documento confidencial</p>
+  <div class="footer">
+    <span class="footer-logo">MondayPlanner</span>
+    <span>Documento confidencial &middot; Gerado por IA</span>
+  </div>
 </div>
 </body>
 </html>"""

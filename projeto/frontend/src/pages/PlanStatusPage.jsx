@@ -135,16 +135,16 @@ export default function PlanStatusPage() {
               href={`${API}/plans/${planId}/view`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary"
-              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}
+              className="btn btn-primary"
+              style={{ textDecoration: 'none', gap: '.5rem' }}
             >
               <span className="material-icons" style={{ fontSize: 18 }}>visibility</span>
               Ver planejamento
             </a>
             <a
               href={`${API}/plans/${planId}/download`}
-              className="btn-ghost"
-              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem' }}
+              className="btn btn-ghost"
+              style={{ textDecoration: 'none', gap: '.35rem' }}
             >
               <span className="material-icons" style={{ fontSize: 16 }}>download</span>
               Baixar .md
@@ -154,7 +154,7 @@ export default function PlanStatusPage() {
 
         {status === 'error' && (
           <div className="plan-cta-group">
-            <Link to="/" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Link to="/" className="btn btn-primary" style={{ textDecoration: 'none' }}>
               Voltar ao início
             </Link>
           </div>

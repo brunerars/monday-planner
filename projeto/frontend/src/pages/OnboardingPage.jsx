@@ -88,7 +88,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* CTA */}
-        <button className="btn-primary ob-cta" onClick={handleStart}>
+        <button className="btn btn-primary ob-cta" onClick={handleStart}>
           <span className="material-icons" style={{ fontSize: 20 }}>chat</span>
           Iniciar conversa
         </button>

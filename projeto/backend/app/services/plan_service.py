@@ -197,10 +197,23 @@ async def generate_plan_background(plan_id: uuid.UUID) -> None:
     engine = create_async_engine(settings.database_url, echo=False)
     factory = async_sessionmaker(engine, expire_on_commit=False)
 
-    async with factory() as db:
-        await generate_plan(plan_id, db)
-
-    await engine.dispose()
+    try:
+        async with factory() as db:
+            await generate_plan(plan_id, db)
+    except Exception as exc:
+        logger.error("generate_plan_background_failed", plan_id=str(plan_id), error=str(exc))
+        # Tenta marcar como erro se possível
+        try:
+            async with factory() as db:
+                result = await db.execute(select(Plan).where(Plan.id == plan_id))
+                plan = result.scalar_one_or_none()
+                if plan and plan.status == "generating":
+                    plan.status = "error"
+                    await db.commit()
+        except Exception:
+            pass
+    finally:
+        await engine.dispose()
 
 
 # ── Queries de leitura ────────────────────────────────────────────────────

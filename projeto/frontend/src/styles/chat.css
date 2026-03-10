@@ -518,6 +518,109 @@
   font-size: var(--text-xs);
 }
 
+/* ── CALENDLY BUTTON ── */
+.chat-calendly-btn {
+  font-family: "Inter Tight", sans-serif;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--white);
+  background: var(--red);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: .45rem 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.chat-calendly-btn:hover {
+  background: #a52222;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(200,42,42,.25);
+}
+.chat-calendly-btn .material-icons { font-size: 14px; }
+
+/* ── CONFIRMATION MODAL ── */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chat-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0,0,0,.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: modalFadeIn .2s ease-out;
+}
+.chat-modal {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 420px;
+  width: 100%;
+  padding: 2rem;
+  animation: modalSlideUp .3s var(--ease-out-expo);
+}
+.chat-modal-title {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin-bottom: .5rem;
+  color: var(--almost-black);
+}
+.chat-modal-text {
+  font-size: var(--text-sm);
+  color: var(--dark-grey);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+.chat-modal-actions {
+  display: flex;
+  gap: .75rem;
+}
+.chat-modal-btn {
+  flex: 1;
+  font-family: "Inter Tight", sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: .7rem 1rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.chat-modal-btn--secondary {
+  background: var(--whitesmoke);
+  color: var(--almost-black);
+  border: 1.5px solid var(--light-grey);
+}
+.chat-modal-btn--secondary:hover {
+  border-color: var(--almost-black);
+}
+.chat-modal-btn--primary {
+  background: var(--almost-black);
+  color: var(--white);
+}
+.chat-modal-btn--primary:hover {
+  background: #000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 600px) {
   .chat-header { padding: .75rem 1rem; }
@@ -526,4 +629,8 @@
   .chat-msg { max-width: 92%; }
   .chat-msg-avatar { width: 28px; height: 28px; font-size: 12px; }
   .plan-card { padding: 2rem 1.5rem; }
+  .chat-calendly-btn span:not(.material-icons) { display: none; }
+  .chat-calendly-btn { padding: .45rem .65rem; }
+  .chat-modal { padding: 1.5rem; }
+  .chat-modal-actions { flex-direction: column-reverse; }
 }

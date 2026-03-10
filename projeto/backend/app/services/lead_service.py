@@ -3,6 +3,7 @@ import json
 from typing import Optional
 
 import structlog
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException, status
@@ -57,12 +58,31 @@ async def create_lead(db: AsyncSession, data: LeadCreate) -> Lead:
         score=score,
     )
     db.add(lead)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        # Race condition: email inserido entre o SELECT e o INSERT
+        result = await db.execute(select(Lead).where(Lead.email == data.email))
+        existing = result.scalar_one_or_none()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "LEAD_EXISTS",
+                "message": "Já existe um registro com este e-mail",
+                "lead_id": str(existing.id) if existing else None,
+            },
+        )
     await db.refresh(lead)
 
     log = logger.bind(lead_id=str(lead.id), empresa=lead.empresa, score=score)
     log.info("lead_created")
     return lead
+
+
+async def get_all_leads(db: AsyncSession) -> list[Lead]:
+    result = await db.execute(select(Lead).order_by(Lead.created_at.desc()))
+    return list(result.scalars().all())
 
 
 async def get_lead(db: AsyncSession, lead_id: uuid.UUID) -> Lead:
