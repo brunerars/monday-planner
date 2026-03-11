@@ -13,10 +13,10 @@
 | 0 | Preparação e Setup | ✅ Completo |
 | 1 | Frontend — LP + Form + Chat UI | ✅ Completo |
 | 2 | Backend — Core + Agent | ✅ Completo |
-| 3 | Integração (Make + Monday) | 🟡 Make pendente config |
+| 3 | Integração (Make + Monday) | 🟡 Config pendente (sem código) |
 | 4 | Integração Front↔Back | ✅ Completo |
-| 5 | Deploy + Go-live | 🟡 Infra pronta |
-| 6 | Validação com leads reais | ⬜ Pós-launch |
+| 5 | Deploy + Go-live | ✅ Em produção |
+| 6 | Validação com leads reais | 🟡 Em andamento |
 
 ---
 
@@ -25,9 +25,9 @@
 | Tarefa | Status | Observação |
 |--------|--------|------------|
 | 0.1 Repositório e estrutura | ✅ | Repo criado, estrutura completa |
-| 0.2 Domínio e DNS | ⬜ | Manual: subdomínio → VPS → Traefik SSL |
+| 0.2 Domínio e DNS | ✅ | CNAME `monday-planner` → `manager.arvsystems.cloud` → Traefik SSL |
 | 0.3 Docker + PG + Redis no VPS | ✅ | docker-compose.yml + docker-compose.prod.yml prontos |
-| 0.4 API keys | ✅ | CLAUDE_API_KEY configurada no .env local |
+| 0.4 API keys | ✅ | Todas as vars configuradas no Portainer |
 | 0.5 Dev environment | ✅ | `docker compose up` sobe frontend + api + postgres + redis |
 
 ---
@@ -38,6 +38,7 @@
 - Recovery de form parcial: dados salvos no Redis (24h) + Postgres (step 3+)
 - Frontend exibe prompt de recovery quando email já tem dados salvos
 - Partial save agressivo em cada transição de step + beforeunload
+- Favicon SVG personalizado (gradiente vermelho→roxo, neutro)
 
 ---
 
@@ -79,7 +80,7 @@
 - `plan_service._notify_make()`: POST ao `MAKE_WEBHOOK_URL` com payload completo (fire-and-forget)
 - `GET /plans/{id}/view`: página HTML estilizada com CTA (link no email ao lead)
 - `scripts/test_webhook_payload.py`: simula fluxo completo e imprime payload Make
-- `MAKE_WEBHOOK_URL` configurada no .env local ✅
+- `MAKE_WEBHOOK_URL` configurada no .env ✅
 
 ### Payload enviado ao Make
 ```json
@@ -95,8 +96,8 @@
   "score": 55,
   "areas_interesse": ["Vendas", "Projetos"],
   "plan_id": "uuid",
-  "plan_view_url": "https://.../api/v1/plans/{id}/view",
-  "plan_download_url": "https://.../api/v1/plans/{id}/download",
+  "plan_view_url": "https://monday-planner.arvsystems.cloud/api/v1/plans/{id}/view",
+  "plan_download_url": "https://monday-planner.arvsystems.cloud/api/v1/plans/{id}/download",
   "summary": { ... }
 }
 ```
@@ -105,7 +106,7 @@
 - [ ] **Cenário Make**: Webhook trigger → cria item no board Monday → envia email ao lead
 - [ ] **Board Monday "Pipeline MondayPlanner"**: Novo Lead → Planejamento Gerado → Call Agendada → Proposta → Fechado
 - [ ] **Template de email**: link para `plan_view_url` + CTA Calendly
-- [ ] **Smoke test**: rodar `python scripts/test_webhook_payload.py` → verificar item criado + email recebido
+- [ ] **Smoke test**: rodar `python scripts/test_webhook_payload.py --base-url https://monday-planner.arvsystems.cloud` → verificar item criado + email recebido
 
 ### Pendente — Automação n8n (partial leads)
 - [ ] Cron job a cada 4h: busca `partial_leads` no Postgres que não viraram leads completos
@@ -125,28 +126,35 @@
 
 ---
 
-## Fase 5 — Deploy
+## Fase 5 — Deploy ✅ Em produção
 
-**Status**: 🟡 Infra pronta, aguarda domínio + smoke test Make
+**URL**: `https://monday-planner.arvsystems.cloud`
 
 ### Checklist de deploy
-- [ ] Domínio + DNS configurado (subdomínio → VPS → Traefik SSL)
-- [ ] `.env` preenchido no VPS (todas as vars)
-- [ ] `docker stack deploy` via GitHub Actions no push para `main`
-- [ ] `alembic upgrade head` automático no startup (já no Dockerfile)
-- [ ] Smoke test: form → chat → plano → Make → email entregue
+- [x] Domínio + DNS configurado (CNAME → Traefik SSL automático)
+- [x] `.env` carregado no Portainer (todas as vars)
+- [x] CI/CD via GitHub Actions (push main → build images → push GHCR)
+- [x] Stack criada no Portainer (Docker Swarm)
+- [x] `alembic upgrade head` automático no startup (CMD do Dockerfile)
+- [x] API + Frontend + Postgres + Redis rodando
 - [ ] UptimeRobot monitorando `/health`
+- [ ] Smoke test end-to-end em prod (form → chat → plano → Make → email)
 - [ ] Testar em mobile (device real)
+
+### Lições de deploy
+- **Alpine + node_modules/.bin**: `chmod +x node_modules/.bin/*` necessário após `npm ci` em Dockerfiles Alpine
+- **`.dockerignore`**: deve incluir `**/node_modules/` para evitar copiar deps locais do Windows
+- **Primeiro deploy Swarm**: stack precisa ser criada manualmente no Portainer na primeira vez; deploys subsequentes são automáticos via CI
 
 ---
 
-## Fase 6 — Validação com Leads Reais
+## Fase 6 — Validação com Leads Reais 🟡
 
 **Meta**: 10 leads nos primeiros 7 dias após launch
 
 | Canal | Ação |
 |-------|------|
-| LinkedIn | Post com screen recording do fluxo completo |
+| LinkedIn | Post sobre o projeto (soft launch) |
 | Network pessoal | 5–10 empresas que precisam de organização/CRM |
 | Cold outreach | DM para empresas médias no segmento-alvo |
 
@@ -157,15 +165,15 @@
 
 ---
 
-## Próximos passos imediatos
+## Próximos passos
 
 ```
 1. [Bruno] Configurar cenário Make (webhook → Monday item → email)
 2. [Bruno] Criar board Pipeline na Monday
-3. [Bruno] Rodar test_webhook_payload.py ponta a ponta com Make ativo
-4. [Bruno] Configurar domínio + DNS
-5. [Deploy] docker stack deploy → smoke test em prod
-6. [Bruno] Automação n8n (partial leads follow-up)
+3. [Bruno] Smoke test end-to-end em prod com Make ativo
+4. [Bruno] Automação n8n (partial leads follow-up)
+5. [Bruno] UptimeRobot no /health
+6. [Bruno] Divulgação LinkedIn + network
 ```
 
 ---
@@ -189,4 +197,4 @@
 - `CLAUDE.md` — guia técnico completo (stack, schemas, endpoints, regras)
 - `setup-n8n.md` — guia de automações n8n (cron partial leads, payload Make, query SQL)
 - `scripts/test_webhook_payload.py` — simula fluxo completo e imprime payload Make
-- OpenAPI interativa em `/docs` quando a API está rodando
+- OpenAPI interativa em `https://monday-planner.arvsystems.cloud/docs`

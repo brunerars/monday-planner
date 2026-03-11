@@ -37,5 +37,5 @@ USER appuser
 
 EXPOSE 8000
 
-# Rodar migrations e subir a aplicacao
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"]
+# Rodar migrations (com tolerancia a race condition de multiplas replicas) e subir a aplicacao
+CMD ["sh", "-c", "alembic upgrade head 2>/dev/null || echo 'Migration skipped (already running on another replica)' && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"]

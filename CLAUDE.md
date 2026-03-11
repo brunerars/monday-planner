@@ -365,10 +365,12 @@ cd projeto/backend && python -m pytest tests/test_agent.py -v
 
 ### docker-compose.prod.yml (Swarm)
 - Serviços: `api` (2 replicas), `frontend` (1 replica), `db` (1 replica), `redis` (1 replica)
-- `api`: imagem `ghcr.io/brunerars/monday-planner:latest` (ou `$IMAGE`); domínio `planner.arvsystems.cloud` via Traefik + Let's Encrypt
+- `api`: imagem `ghcr.io/brunerars/monday-planner:latest` (ou `$IMAGE`); domínio `monday-planner.arvsystems.cloud` via Traefik + Let's Encrypt
 - `frontend`: imagem `ghcr.io/brunerars/monday-planner-frontend:latest` (ou `$FRONTEND_IMAGE`); Traefik roteia para frontend tudo que não for `/api`, `/docs`, `/redoc`, `/health`, `/openapi.json` (prioridade 1 vs 10 da API)
 - DB e Redis não expõem portas externamente
 - Redis prod: `--maxmemory 256mb --maxmemory-policy allkeys-lru`
+- **Produção**: `https://monday-planner.arvsystems.cloud` — Stack no Portainer, CI/CD via GitHub Actions
+- **`.dockerignore`**: deve incluir `**/node_modules/` para evitar copiar deps locais
 
 ## Ordem de execução para novas features
 1. Schema/modelo → `app/models/` → nova migration Alembic
