@@ -168,7 +168,7 @@ export default function PlanStatusPage() {
             background: 'var(--whitesmoke)',
             borderRadius: 'var(--radius-lg)',
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '.5rem',
             textAlign: 'center',
           }}>
@@ -178,15 +178,21 @@ export default function PlanStatusPage() {
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--grey)' }}>Boards</div>
               </div>
             )}
-            {plan.summary.automations != null && (
+            {((plan.summary.automacoes_make || 0) + (plan.summary.automacoes_n8n || 0)) > 0 && (
               <div>
-                <div style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>{plan.summary.automations}</div>
+                <div style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>{(plan.summary.automacoes_make || 0) + (plan.summary.automacoes_n8n || 0)}</div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--grey)' }}>Automações</div>
               </div>
             )}
-            {plan.summary.integrations != null && (
+            {plan.summary.agentes_ia != null && (
               <div>
-                <div style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>{plan.summary.integrations}</div>
+                <div style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>{plan.summary.agentes_ia}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--grey)' }}>Agentes IA</div>
+              </div>
+            )}
+            {plan.summary.integracoes != null && (
+              <div>
+                <div style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>{plan.summary.integracoes}</div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--grey)' }}>Integrações</div>
               </div>
             )}

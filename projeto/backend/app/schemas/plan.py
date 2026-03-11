@@ -6,13 +6,16 @@ from pydantic import BaseModel, model_validator
 
 
 class PlanSummary(BaseModel):
-    workspaces: Optional[int] = None
     boards: Optional[int] = None
-    automations: Optional[int] = None
-    integrations: Optional[int] = None
+    automacoes_make: Optional[int] = None
+    automacoes_n8n: Optional[int] = None
+    agentes_ia: Optional[int] = None
+    integracoes: Optional[int] = None
     plano_recomendado: Optional[str] = None
     usuarios_estimados: Optional[int] = None
     custo_mensal_estimado_brl: Optional[float] = None
+    fases_implementacao: Optional[int] = None
+    semanas_estimadas: Optional[int] = None
 
 
 class PlanStatusResponse(BaseModel):

@@ -2,7 +2,7 @@
 
 **Projeto**: Plataforma de captação e planejamento inteligente para Monday.com
 **Responsável**: Bruno — Head of Technology, ARV Systems
-**Última atualização**: Março 2026
+**Última atualização**: 11 Mar 2026
 
 ---
 
@@ -10,78 +10,49 @@
 
 | Fase | Descrição | Status |
 |------|-----------|--------|
-| 0 | Preparação e Setup | 🟡 Parcial |
-| 1 | Frontend — LP + Form + Chat UI | ⏳ Aguardando design systems |
+| 0 | Preparação e Setup | ✅ Completo |
+| 1 | Frontend — LP + Form + Chat UI | ✅ Completo |
 | 2 | Backend — Core + Agent | ✅ Completo |
-| 3 | Integração (Make + Monday) | ✅ Revisado e fechado |
-| 4 | Integração Front↔Back | ⬜ Pendente |
+| 3 | Integração (Make + Monday) | 🟡 Make pendente config |
+| 4 | Integração Front↔Back | ✅ Completo |
 | 5 | Deploy + Go-live | 🟡 Infra pronta |
 | 6 | Validação com leads reais | ⬜ Pós-launch |
 
 ---
 
-## Fase 0 — Preparação e Setup
+## Fase 0 — Preparação e Setup ✅
 
 | Tarefa | Status | Observação |
 |--------|--------|------------|
-| 0.1 Repositório e estrutura | ✅ | Repo criado, estrutura de pastas completa |
+| 0.1 Repositório e estrutura | ✅ | Repo criado, estrutura completa |
 | 0.2 Domínio e DNS | ⬜ | Manual: subdomínio → VPS → Traefik SSL |
 | 0.3 Docker + PG + Redis no VPS | ✅ | docker-compose.yml + docker-compose.prod.yml prontos |
-| 0.4 API keys | ⬜ | Manual: Anthropic key no `.env` do VPS |
-| 0.5 Referência do site | ⬜ | Manual: escolher LP de referência (lapa.ninja) antes de iniciar Fase 1 |
+| 0.4 API keys | ✅ | CLAUDE_API_KEY configurada no .env local |
+| 0.5 Dev environment | ✅ | `docker compose up` sobe frontend + api + postgres + redis |
 
 ---
 
-## Fase 1 — Frontend
+## Fase 1 — Frontend ✅ Completo
 
-**Status**: ⏳ Aguardando design systems (Bruno)
-**Dependência**: Design system LP + Design system Chat prontos
-
-### O que vem quando os design systems chegarem
-
-**1.1–1.2 Landing Page** (~4h)
-- Adaptar referência com branding, conteúdo e seções:
-  hero → como funciona (3 steps) → benefícios → CTA → form
-- Mobile-first
-
-**1.3 Multi-step Form** (~4h)
-- 4 steps conforme `api-contracts.md` seção 1
-- Validação client-side por step
-- `localStorage` para persistência parcial entre steps
-- Submit: `POST /api/v1/leads` com loading + erro 409 (email já existe) / 422
-
-**1.5 Onboarding** (~1.5h)
-- Tela de transição form → chat
-- Cartão visual com resumo dos dados preenchidos
-- Botão "Iniciar conversa" → `POST /api/v1/chat/start`
-
-**1.4 Chat Interface** (~5h)
-- Layout: sidebar (dados do lead) + área de chat
-- Bubbles: usuário (direita) / agente (esquerda)
-- Input bloqueado enquanto aguarda resposta (sem debounce necessário)
-- Indicador "digitando..." durante chamada à API
-- Contador discreto de mensagens restantes no topo
-- Estados: IDLE → SENDING → RATE_LIMITED → GENERATING → PLAN_READY
-- Tela GENERATING: progress bar + "Gerando seu planejamento..."
-- Tela PLAN_READY: botão "Ver Planejamento" (abre `/plans/{id}/view`) + "Agendar Call" (Calendly)
-- Mobile: chat full-screen, sidebar vira header colapsável
-
-**1.6 Polish** (~1h)
-- Testar fluxo completo em mobile (Chrome DevTools)
-- Loading states, responsividade, performance
+- Landing Page + Multi-step Form (4 steps) + Onboarding + Chat UI
+- Recovery de form parcial: dados salvos no Redis (24h) + Postgres (step 3+)
+- Frontend exibe prompt de recovery quando email já tem dados salvos
+- Partial save agressivo em cada transição de step + beforeunload
 
 ---
 
 ## Fase 2 — Backend ✅ Completo
 
-**68 testes passando. Swagger em `/docs`.**
+**73 testes passando. Swagger em `/docs`.**
 
 ### Endpoints disponíveis
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | POST | `/api/v1/leads` | Criar lead (form submit) |
-| POST | `/api/v1/leads/partial` | Salvar form parcial (abandono) |
+| POST | `/api/v1/leads/partial` | Salvar form parcial (Redis + Postgres se email) |
+| GET | `/api/v1/leads` | Listar todos os leads |
+| GET | `/api/v1/leads/partial/recover` | Recuperar form parcial por email |
 | GET | `/api/v1/leads/{id}` | Buscar lead por ID |
 | PATCH | `/api/v1/leads/{id}/status` | Atualizar status do lead |
 | POST | `/api/v1/chat/start` | Iniciar sessão de chat |
@@ -94,84 +65,76 @@
 | GET | `/api/v1/plans/{id}/download` | Download do `.md` |
 | GET | `/health` | Health check (DB + Redis) |
 
-### Arquitetura implementada
+### Infraestrutura de dados
 
-```
-app/
-├── agent/
-│   ├── prompts.py      # System prompt + PLAN_GENERATION_PROMPT + compression
-│   ├── context.py      # Sliding window (8 msgs) + summary via Haiku + cache Redis
-│   └── guardrails.py   # Tokens (max 500), msg limit (15), off-topic detection
-├── models/             # SQLAlchemy 2.0: Lead, ChatSession, ChatMessage, Plan
-├── schemas/            # Pydantic V2: request/response de leads, chat, plans
-├── routers/            # leads.py, chat.py, plans.py (webhooks.py = stub)
-├── services/
-│   ├── lead_service.py   # CRUD + score calculation
-│   ├── agent_service.py  # start_session, process_message, end_session
-│   └── plan_service.py   # generate_plan + _notify_make (Make webhook)
-└── utils/
-    ├── redis_client.py   # Connection pool async
-    ├── rate_limiter.py   # 3 msg/min por sessão, 100/min global
-    └── security.py       # Email validation
-```
-
-### Variáveis de ambiente necessárias
-
-```env
-DATABASE_URL=postgresql+asyncpg://...
-REDIS_URL=redis://...
-CLAUDE_API_KEY=sk-ant-...
-CLAUDE_MODEL=claude-sonnet-4-20250514
-MAKE_WEBHOOK_URL=https://hook.eu1.make.com/...   # Webhook notifica Make quando plano fica pronto
-API_BASE_URL=https://planner.seudominio.com      # Usado para montar URLs no payload do Make
-CTA_CALENDLY_URL=https://calendly.com/...        # Botão de call no HTML view e no email
-CORS_ORIGINS=https://planner.seudominio.com
-ENVIRONMENT=production
-```
+- **Leads parciais**: Redis (TTL 24h, recovery em tempo real) + Postgres (step 3+ com email, durável para automações)
+- **Lead scoring**: calculado no cadastro (17-120 pts), enviado no payload Make
+- **Plano gerado**: markdown + summary JSON, renderizado como HTML estilizado
 
 ---
 
-## Fase 3 — Integração (Revisada) ✅
+## Fase 3 — Integração Make + Monday 🟡
 
-**Estratégia simplificada — sem Monday service no backend.**
+### Código pronto ✅
+- `plan_service._notify_make()`: POST ao `MAKE_WEBHOOK_URL` com payload completo (fire-and-forget)
+- `GET /plans/{id}/view`: página HTML estilizada com CTA (link no email ao lead)
+- `scripts/test_webhook_payload.py`: simula fluxo completo e imprime payload Make
+- `MAKE_WEBHOOK_URL` configurada no .env local ✅
 
-### O que foi implementado (código)
-- `plan_service._notify_make()`: quando plano fica `generated`, faz POST para `MAKE_WEBHOOK_URL` com todos os dados do lead + links do plano. Fire-and-forget.
-- `GET /plans/{id}/view`: página HTML estilizada com CTA — é o link que o Make inclui no email ao lead.
+### Payload enviado ao Make
+```json
+{
+  "lead_id": "uuid",
+  "empresa": "...",
+  "nome_contato": "...",
+  "email": "...",
+  "whatsapp": "...",
+  "segmento": "...",
+  "tipo_negocio": "B2B/B2C",
+  "porte": "...",
+  "score": 55,
+  "areas_interesse": ["Vendas", "Projetos"],
+  "plan_id": "uuid",
+  "plan_view_url": "https://.../api/v1/plans/{id}/view",
+  "plan_download_url": "https://.../api/v1/plans/{id}/download",
+  "summary": { ... }
+}
+```
 
-### O que Bruno configura manualmente (sem código)
-- **Board "Pipeline MondayPlanner"** na Monday (via MCP — já validado): grupos Novo Lead → Planejamento Gerado → Call Agendada → Proposta Enviada → Fechado Ganho/Perdido
-- **Make**: step 1 recebe webhook → cria item no board com dados do lead; step 2 envia email ao lead com link para `/plans/{id}/view`
+### Pendente — Configurar no Make (sem código)
+- [ ] **Cenário Make**: Webhook trigger → cria item no board Monday → envia email ao lead
+- [ ] **Board Monday "Pipeline MondayPlanner"**: Novo Lead → Planejamento Gerado → Call Agendada → Proposta → Fechado
+- [ ] **Template de email**: link para `plan_view_url` + CTA Calendly
+- [ ] **Smoke test**: rodar `python scripts/test_webhook_payload.py` → verificar item criado + email recebido
 
-### Entregável ao lead
-O lead recebe email com link para a **página HTML do planejamento** (profissional, responsiva, com botão de agendamento de call). Bruno usa Claude Code + MCP Monday para criar o board de execução real do cliente antes/durante a call — esse é o diferencial competitivo.
+### Pendente — Automação n8n (partial leads)
+- [ ] Cron job a cada 4h: busca `partial_leads` no Postgres que não viraram leads completos
+- [ ] Dispara follow-up por email para leads que abandonaram no step 3+
+- Ver `setup-n8n.md` para detalhes da query e workflow
 
 ---
 
-## Fase 4 — Integração Front↔Back
+## Fase 4 — Integração Front↔Back ✅ Completo
 
-**Status**: ⬜ Pendente (inicia após Fase 1 completa)
-**Estimativa**: ~5h
-
-- Form → `POST /api/v1/leads` (erros 409/422 tratados na UI)
-- Onboarding → `POST /api/v1/chat/start` → armazena `session_id` no `sessionStorage`
-- Chat → `POST /api/v1/chat/message` em loop; input bloqueado durante resposta
-- Rate limit 429 → contador regressivo na UI antes de liberar input
-- `is_final: true` → transição para tela GENERATING
-- Polling `GET /plans/status/{id}` a cada 3s → quando `completed`, redireciona para `/plans/{id}/view`
+- Form → `POST /leads` (erros 409/422 tratados)
+- Onboarding → `POST /chat/start` → `sessionStorage`
+- Chat → `POST /chat/message` em loop; input bloqueado durante resposta
+- Rate limit 429 → countdown na UI
+- `is_final: true` → tela GENERATING
+- Polling `GET /plans/status/{id}` a cada 3s → redireciona para `/plans/{id}/view`
 
 ---
 
 ## Fase 5 — Deploy
 
-**Status**: 🟡 Infra pronta, aguarda domínio e Fase 4
-**Estimativa**: ~2h de configuração
+**Status**: 🟡 Infra pronta, aguarda domínio + smoke test Make
 
 ### Checklist de deploy
-- [ ] `.env` preenchido no VPS (todas as vars acima)
+- [ ] Domínio + DNS configurado (subdomínio → VPS → Traefik SSL)
+- [ ] `.env` preenchido no VPS (todas as vars)
 - [ ] `docker stack deploy` via GitHub Actions no push para `main`
-- [ ] `alembic upgrade head` automático no startup (já configurado no Dockerfile)
-- [ ] Smoke test: form → chat → plano gerado → Make recebeu → email entregue
+- [ ] `alembic upgrade head` automático no startup (já no Dockerfile)
+- [ ] Smoke test: form → chat → plano → Make → email entregue
 - [ ] UptimeRobot monitorando `/health`
 - [ ] Testar em mobile (device real)
 
@@ -187,39 +150,23 @@ O lead recebe email com link para a **página HTML do planejamento** (profission
 | Network pessoal | 5–10 empresas que precisam de organização/CRM |
 | Cold outreach | DM para empresas médias no segmento-alvo |
 
-**KPIs para validar a tese:**
+**KPIs:**
 - Taxa de conclusão do form: meta > 60%
 - Taxa de conclusão do chat: meta > 40%
 - Taxa de agendamento de call: meta > 20% dos planos gerados
 
-**Após os primeiros leads:**
-- Revisar qualidade do planejamento gerado (leitura manual)
-- Ajustar system prompt conforme padrões de conversa reais
-- Calibrar off-topic detection se necessário
-
 ---
 
-## Caminho crítico até o go-live
+## Próximos passos imediatos
 
 ```
-Bruno: design system LP ──┐
-Bruno: design system Chat ─┤
-Bruno: 0.2 DNS/domínio ───┤
-Bruno: 0.4 API keys ──────┤
-Bruno: 0.5 referência ────┤
-                           ↓
-                     Fase 1 (frontend)
-                           ↓
-                     Fase 4 (integração)
-                           ↓
-                     Fase 5 (deploy)
-                           ↓
-                     Fase 6 (leads reais)
+1. [Bruno] Configurar cenário Make (webhook → Monday item → email)
+2. [Bruno] Criar board Pipeline na Monday
+3. [Bruno] Rodar test_webhook_payload.py ponta a ponta com Make ativo
+4. [Bruno] Configurar domínio + DNS
+5. [Deploy] docker stack deploy → smoke test em prod
+6. [Bruno] Automação n8n (partial leads follow-up)
 ```
-
-**Paralelo (pode fazer agora):**
-- Criar board de pipeline na Monday (MCP)
-- Configurar Make (webhook + email step)
 
 ---
 
@@ -235,3 +182,11 @@ Bruno: 0.5 referência ────┤
 8. **Sem autenticação de usuário** — lead não precisa de conta
 9. **Sem painel admin** — Monday Kanban é o painel
 10. **Make como middleware de notificação** — sem Monday service no backend
+
+---
+
+## Referências
+- `CLAUDE.md` — guia técnico completo (stack, schemas, endpoints, regras)
+- `setup-n8n.md` — guia de automações n8n (cron partial leads, payload Make, query SQL)
+- `scripts/test_webhook_payload.py` — simula fluxo completo e imprime payload Make
+- OpenAPI interativa em `/docs` quando a API está rodando

@@ -5,7 +5,7 @@ Fluxo:
   1. Carrega Plan (status=generating) + Lead + histórico de mensagens
   2. Lock no Redis (plan:lock:{lead_id}) para evitar geração duplicada
   3. Monta prompt com contexto completo
-  4. Chama Claude API (max_tokens 4096)
+  4. Chama Claude API (max_tokens 8192)
   5. Extrai SUMMARY_JSON do output
   6. Salva content_md + summary_json no DB (status=generated)
   7. Notifica Make webhook (fire-and-forget)
@@ -32,7 +32,7 @@ from app.utils.redis_client import get_redis
 logger = structlog.get_logger()
 
 _PLAN_LOCK_TTL = 300  # 5 minutos
-_PLAN_MAX_TOKENS = 4096
+_PLAN_MAX_TOKENS = 8192
 
 
 def _get_claude_client() -> anthropic.AsyncAnthropic:

@@ -236,6 +236,23 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: .88em;
     border: 1px solid var(--border);
   }}
+  pre {{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: .82rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }}
+  pre code {{
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+  }}
   blockquote {{
     border-left: 3px solid var(--red);
     padding-left: 1rem;

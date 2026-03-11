@@ -69,13 +69,14 @@ export default function FormPage() {
   const [errors, setErrors]   = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [recoveryPrompt, setRecoveryPrompt] = useState(null)
 
   // Persist to localStorage on every change
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   }, [data])
 
-  // Send partial lead on beforeunload (step 3+ only)
+  // Fire-and-forget partial save (used on step transitions + beforeunload)
   const sendPartial = useCallback(() => {
     if (step < 3 || !data.email) return
     const payload = JSON.stringify({
@@ -84,8 +85,17 @@ export default function FormPage() {
         empresa:       data.empresa,
         segmento:      data.segmento,
         tipo_negocio:  data.tipo_negocio,
+        porte:         data.porte,
         email:         data.email,
         nome_contato:  data.nome_contato,
+        whatsapp:      data.whatsapp,
+        cargo:         data.cargo,
+        cidade:        data.cidade,
+        estado:        data.estado,
+        colaboradores: data.colaboradores,
+        usa_monday:    data.usa_monday,
+        areas_interesse: data.areas_interesse,
+        dor_principal: data.dor_principal,
       },
     })
     navigator.sendBeacon('/api/v1/leads/partial', new Blob([payload], { type: 'application/json' }))
@@ -101,12 +111,52 @@ export default function FormPage() {
     if (errors[field]) setErrors(prev => { const e = { ...prev }; delete e[field]; return e })
   }
 
-  function handleNext() {
+  async function handleNext() {
     const errs = validateStep(step, data)
     if (Object.keys(errs).length) { setErrors(errs); return }
     setErrors({})
+
+    // Recovery check: when leaving step 3 (email just validated)
+    if (step === 3 && data.email) {
+      try {
+        const res = await fetch(`/api/v1/leads/partial/recover?email=${encodeURIComponent(data.email)}`)
+        if (res.ok) {
+          const saved = await res.json()
+          // Only offer recovery if saved data has more progress
+          if (saved.step_completed >= step && saved.data) {
+            setRecoveryPrompt(saved)
+            return
+          }
+        }
+      } catch {
+        // best-effort, continue normally
+      }
+    }
+
+    advanceStep()
+  }
+
+  function advanceStep() {
+    // Save partial on every step transition (fire-and-forget)
+    sendPartial()
     setStep(s => s + 1)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function acceptRecovery() {
+    if (!recoveryPrompt) return
+    const saved = recoveryPrompt
+    setData(prev => ({ ...prev, ...saved.data }))
+    setRecoveryPrompt(null)
+    // Jump to the step after the saved one, or at least step 4
+    const targetStep = Math.min(Math.max(saved.step_completed + 1, step + 1), TOTAL_STEPS)
+    setStep(targetStep)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function declineRecovery() {
+    setRecoveryPrompt(null)
+    advanceStep()
   }
 
   function handleBack() {
@@ -177,6 +227,21 @@ export default function FormPage() {
           {step === 2 && <FormStep2 {...stepProps} />}
           {step === 3 && <FormStep3 {...stepProps} />}
           {step === 4 && <FormStep4 {...stepProps} />}
+
+          {recoveryPrompt && (
+            <div className="recovery-prompt">
+              <span className="material-icons" style={{ color: 'var(--primary)', fontSize: 22, verticalAlign: 'middle', marginRight: '.4em' }}>restore</span>
+              <span>Encontramos dados salvos anteriormente para <strong>{recoveryPrompt.data.email}</strong>. Deseja continuar de onde parou?</span>
+              <div style={{ display: 'flex', gap: '.5rem', marginTop: '.75rem' }}>
+                <button type="button" className="btn btn-primary btn-sm" onClick={acceptRecovery}>
+                  Sim, continuar
+                </button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={declineRecovery}>
+                  Não, preencher novamente
+                </button>
+              </div>
+            </div>
+          )}
 
           {submitError && (
             <div className="submit-error">

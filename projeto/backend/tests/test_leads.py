@@ -248,3 +248,63 @@ class TestLeadParcial:
         r1 = await client.post(f"{BASE}/leads/partial", json=payload)
         r2 = await client.post(f"{BASE}/leads/partial", json=payload)
         assert r1.json()["id"] != r2.json()["id"]
+
+
+# ── GET /leads/partial/recover ───────────────────────────────────────────────
+
+class TestLeadParcialRecover:
+    async def test_salvar_e_recuperar_por_email(self, client: AsyncClient):
+        """Salva partial com email e recupera via GET."""
+        payload = {
+            "step_completed": 3,
+            "data": {"email": "recover@test.com", "empresa": "RecoverCo", "nome_contato": "Ana"},
+        }
+        await client.post(f"{BASE}/leads/partial", json=payload)
+        resp = await client.get(f"{BASE}/leads/partial/recover", params={"email": "recover@test.com"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["step_completed"] == 3
+        assert data["data"]["empresa"] == "RecoverCo"
+        assert data["data"]["email"] == "recover@test.com"
+
+    async def test_lookup_case_insensitive(self, client: AsyncClient):
+        """Email salvo em maiúsculo deve ser encontrado com minúsculo."""
+        payload = {
+            "step_completed": 3,
+            "data": {"email": "UPPER@Test.COM", "empresa": "CaseCo"},
+        }
+        await client.post(f"{BASE}/leads/partial", json=payload)
+        resp = await client.get(f"{BASE}/leads/partial/recover", params={"email": "upper@test.com"})
+        assert resp.status_code == 200
+        assert resp.json()["data"]["empresa"] == "CaseCo"
+
+    async def test_email_nao_encontrado_retorna_404(self, client: AsyncClient):
+        resp = await client.get(f"{BASE}/leads/partial/recover", params={"email": "naoexiste@x.com"})
+        assert resp.status_code == 404
+        assert resp.json()["detail"]["code"] == "PARTIAL_NOT_FOUND"
+
+    async def test_partial_sem_email_nao_recuperavel(self, client: AsyncClient):
+        """Partial salvo sem email no data não cria índice por email."""
+        payload = {"step_completed": 1, "data": {"tipo_negocio": "B2B"}}
+        await client.post(f"{BASE}/leads/partial", json=payload)
+        resp = await client.get(f"{BASE}/leads/partial/recover", params={"email": ""})
+        assert resp.status_code == 404
+
+    async def test_segundo_save_sobrescreve(self, client: AsyncClient):
+        """Segundo save com mesmo email atualiza os dados."""
+        payload1 = {
+            "step_completed": 2,
+            "data": {"email": "overwrite@test.com", "empresa": "Antiga"},
+        }
+        payload2 = {
+            "step_completed": 3,
+            "data": {"email": "overwrite@test.com", "empresa": "Nova", "nome_contato": "Pedro"},
+        }
+        await client.post(f"{BASE}/leads/partial", json=payload1)
+        await client.post(f"{BASE}/leads/partial", json=payload2)
+        resp = await client.get(f"{BASE}/leads/partial/recover", params={"email": "overwrite@test.com"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["step_completed"] == 3
+        assert data["data"]["empresa"] == "Nova"
+        assert data["data"]["nome_contato"] == "Pedro"

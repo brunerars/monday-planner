@@ -125,23 +125,49 @@ def build_plan_generation_prompt(lead, conversation_history: str) -> str:
     areas = ", ".join(lead.areas_interesse or [])
     data_atual = datetime.now().strftime("%d/%m/%Y")
 
-    return f"""Com base nos dados do lead e no histórico da conversa abaixo, gere um planejamento completo de implementação Monday.com.
+    # Calibrar complexidade ao porte
+    if lead.porte in ("MEI", "ME"):
+        porte_guia = "3-5 boards (operação enxuta, automações essenciais)"
+    elif lead.porte in ("EPP", "Medio"):
+        porte_guia = "5-8 boards (funis separados, automações intermediárias)"
+    else:
+        porte_guia = "8-12+ boards (master data normalizado, orquestração completa)"
 
-DADOS DO LEAD:
+    return f"""Você é um arquiteto de operações especializado em Monday.com, Make.com, n8n e Claude API.
+Com base nos dados do lead e no histórico da conversa, gere um planejamento de implementação técnico e concreto.
+
+═══ STACK DISPONÍVEL (use conforme necessidade do cliente) ═══
+- **Monday.com** → boards, colunas tipadas, views, dashboards, board_relations
+- **Make.com** → automações lineares (1 trigger → 1-2 ações) + endpoints webhook para dados externos
+- **n8n** → orquestração multi-step (wait nodes, condicionais, loops, delays, múltiplas ações)
+- **Claude API** → inteligência contextual (scoring, análise de padrões, geração de texto, decisões com histórico)
+
+═══ DADOS DO LEAD ═══
 - Empresa: {lead.empresa}
 - Segmento: {lead.segmento}
 - Tipo: {lead.tipo_negocio}
-- Porte: {lead.porte}
+- Porte: {lead.porte} → calibre para {porte_guia}
 - Colaboradores: {lead.colaboradores or 'não informado'}
 - Áreas de interesse: {areas}
 - Dor principal: {lead.dor_principal or 'não informada'}
 - Usa Monday: {lead.usa_monday or 'não informado'}
 
-HISTÓRICO DA CONVERSA:
+═══ HISTÓRICO DA CONVERSA ═══
 {conversation_history}
 
-INSTRUÇÕES:
-Gere o planejamento em markdown puro, seguindo EXATAMENTE esta estrutura:
+═══ INSTRUÇÕES DE FORMATO ═══
+Gere markdown puro. Siga EXATAMENTE a estrutura abaixo. Regras obrigatórias:
+- Colunas de boards SEMPRE em tabela markdown (Nome | Tipo | Observação) — nunca como lista
+- Automações separadas por ferramenta (Make vs n8n vs IA) com critério claro de separação
+- Diagrama ASCII de conexões entre boards (use box-drawing: ─ │ ┌ ┐ └ ┘ ├ ┤ ► ◄ ▼ ▲)
+- Board relations (`board_relation`) explícitas entre boards relacionados
+- Sub-statuses por etapa quando o funil tiver múltiplas fases
+- Roadmap com checkboxes (`- [ ]`) concretos e específicos, nunca genéricos
+- Resultado esperado como tabela antes/depois com métricas
+- NÃO invente ferramentas ou sistemas que o cliente não mencionou na conversa
+- NÃO sugira integrações com plataformas que o cliente não usa
+
+═══ ESTRUTURA DO DOCUMENTO ═══
 
 # Planejamento de Implementação Monday.com
 ## {lead.empresa} — {lead.segmento}
@@ -151,42 +177,123 @@ Gere o planejamento em markdown puro, seguindo EXATAMENTE esta estrutura:
 
 ---
 
-## 1. Contexto da Empresa
-[Descreva porte, colaboradores, segmento, situação atual com ferramentas e processos, dores identificadas na conversa]
+## 1. Diagnóstico
 
-## 2. Objetivos Identificados
-[Liste os objetivos priorizados conforme a conversa, em ordem de impacto]
+### Situação Atual
+[Descreva ferramentas usadas hoje, processos manuais identificados, volume de operação (leads/mês, projetos, tickets, etc.)]
 
-## 3. Estrutura Proposta na Monday.com
+### Dores Mapeadas
+[Liste as dores concretas extraídas da conversa — não genéricas]
 
-### 3.1 Workspaces
-[Descreva os workspaces recomendados com nome e propósito]
+### O que muda com a implementação
 
-### 3.2 Boards
-[Para cada board: nome, propósito, colunas sugeridas (tipo + nome), grupos (etapas/categorias), views recomendadas (Kanban, Timeline, Dashboard)]
+| Aspecto | Antes | Depois |
+|---|---|---|
+[Tabela com 4-6 linhas de transformações concretas extraídas das dores]
 
-### 3.3 Automações Sugeridas
-[Liste automações relevantes: trigger → ação → benefício para o negócio]
+## 2. Arquitetura Proposta
 
-### 3.4 Integrações Recomendadas
-[Liste integrações com ferramentas mencionadas ou relevantes para o segmento: ferramenta → tipo de conexão → dados sincronizados]
+### Árvore de Pastas e Boards
+[Diagrama ASCII com a estrutura completa de pastas e boards, ex:]
+```
+pasta: [Nome da Pasta]
+├── BOARD_1    descrição curta
+├── BOARD_2    descrição curta
+└── BOARD_N    descrição curta
+```
+
+### Especificação dos Boards
+[Para CADA board proposto, inclua:]
+
+#### [Nome do Board]
+**Grupos:** [Etapa1] | [Etapa2] | [Etapa3] | ...
+
+| Coluna | Tipo | Observação |
+|---|---|---|
+[Tabela com todas as colunas relevantes — incluir board_relation quando conectar a outro board]
+
+[Se o board tiver funil com sub-statuses, incluir tabela:]
+| Etapa | Sub-Statuses |
+|---|---|
+[Sub-statuses por etapa]
+
+### Diagrama de Conexões entre Boards
+```
+[Diagrama ASCII mostrando board_relations e fluxo de dados entre boards]
+[Usar: ──► para relação direcional, ◄──► para bidirecional]
+```
+
+## 3. Automações e Integrações
+
+> **Critério de separação:**
+> - **Make** → ações lineares, 1 trigger → 1-2 ações, sem lógica condicional complexa. Também porta de entrada de dados externos via webhook.
+> - **n8n** → orquestração multi-step, lógica temporal (waits/delays), loops, condicionais, múltiplos destinatários.
+> - **Claude API** → inteligência contextual, análise de padrões, geração de texto, decisões que dependem de histórico e raciocínio.
+
+### Make.com — Automações Lineares
+
+| ID | Nome | Trigger | Ação | Complexidade |
+|---|---|---|---|---|
+[Listar automações Make — incluir MAKE-WH (webhook endpoint) se o cliente receber dados externos]
+
+### n8n — Orquestração Multi-step
+
+| ID | Nome | Trigger | Lógica | Por que n8n |
+|---|---|---|---|---|
+[Listar workflows n8n — cada um deve justificar por que não pode ser Make simples]
+
+### Inteligência com IA (Claude API)
+
+| ID | Nome | Quando usar | Input | Output |
+|---|---|---|---|---|
+[Listar agentes IA — apenas se houver caso de uso real identificado na conversa. Se não houver, omita esta seção.]
+
+### Integrações com Ferramentas Existentes
+
+| Ferramenta | Via | Dados Sincronizados |
+|---|---|---|
+[Apenas ferramentas que o cliente mencionou usar — Make, n8n ou nativo Monday conforme complexidade]
 
 ## 4. Roadmap de Implementação
-- Fase 1 (Semana 1-2): Setup básico
-- Fase 2 (Semana 3-4): Automações e integrações
-- Fase 3 (Semana 5-6): Treinamento e ajustes
 
-## 5. Estimativa de Licenças Monday.com
-[Plano recomendado (Standard/Pro/Enterprise), número de usuários estimado, custo mensal em BRL]
+### Fase 1 — Master data e boards base (Semana 1-2)
+- [ ] [Tarefas concretas: criar boards X, Y, importar dados, configurar colunas]
 
-## 6. Próximos Passos
-→ Agendar call de alinhamento com nosso time
-→ [Link para agendamento]
+### Fase 2 — Funis e relações (Semana 2-3)
+- [ ] [Configurar board_relations, views, dashboards]
+
+### Fase 3 — Automações Make + n8n (Semana 3-4)
+- [ ] [Implementar automações por ID]
+
+### Fase 4 — Integrações e IA (Semana 4-5)
+- [ ] [Conectar ferramentas externas, configurar agentes IA se aplicável]
+
+### Fase 5 — Treinamento + go-live (Semana 5-6)
+- [ ] [Treinar equipe, operar em paralelo, validar, go-live]
+
+## 5. Estimativa de Licenças
+
+| Item | Plano | Usuários | Custo Mensal (BRL) |
+|---|---|---|---|
+| Monday.com | [Standard/Pro/Enterprise] | [n] | [valor] |
+[Adicionar Make/n8n se aplicável]
+
+## 6. Resultado Esperado
+
+| Métrica | Antes | Depois |
+|---|---|---|
+[Tabela com 5-8 métricas concretas: boards, colunas, automações, tempo de processo, visibilidade, etc.]
+
+## 7. Próximos Passos
+→ Agendar call de alinhamento com nosso time para validar a arquitetura
+→ Definir prioridade de implementação e responsáveis
+→ Iniciar Fase 1 após aprovação
 
 ---
 
-Após o markdown, adicione exatamente esta linha com o JSON de resumo (sem formatação extra):
-SUMMARY_JSON: {{"workspaces": <n>, "boards": <n>, "automations": <n>, "integrations": <n>, "plano_recomendado": "<Standard|Pro|Enterprise>", "usuarios_estimados": <n>, "custo_mensal_estimado_brl": <valor_numerico>}}"""
+═══ INSTRUÇÃO FINAL ═══
+Após o markdown completo, adicione exatamente esta linha com o JSON de resumo (sem formatação extra, sem quebra de linha dentro do JSON):
+SUMMARY_JSON: {{"boards": <n>, "automacoes_make": <n>, "automacoes_n8n": <n>, "agentes_ia": <n>, "integracoes": <n>, "plano_recomendado": "<Standard|Pro|Enterprise>", "usuarios_estimados": <n>, "custo_mensal_estimado_brl": <valor_numerico>, "fases_implementacao": <n>, "semanas_estimadas": <n>}}"""
 
 
 CONTEXT_COMPRESSION_PROMPT = """Resuma as seguintes mensagens de uma conversa entre um consultor de Monday.com e um cliente em potencial.

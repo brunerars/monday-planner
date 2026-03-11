@@ -9,6 +9,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 
 from app.models.lead import Lead
+from app.models.partial_lead import PartialLead
 from app.schemas.lead import LeadCreate, LeadStatusUpdate, PartialLeadCreate
 from app.utils.redis_client import get_redis
 
@@ -115,11 +116,43 @@ async def update_lead_status(
     return lead
 
 
-async def create_partial_lead(data: PartialLeadCreate) -> dict:
+async def create_partial_lead(data: PartialLeadCreate, db: Optional[AsyncSession] = None) -> dict:
     redis = get_redis()
     partial_id = str(uuid.uuid4())
     key = f"lead:partial:{partial_id}"
-    payload = {"step_completed": data.step_completed, "data": data.data}
-    await redis.setex(key, 86400, json.dumps(payload))  # TTL 24h
+    payload = {"id": partial_id, "step_completed": data.step_completed, "data": data.data}
+    payload_json = json.dumps(payload)
+    await redis.setex(key, 86400, payload_json)  # TTL 24h
+
+    # Índice por email para recovery cross-device
+    email = data.data.get("email")
+    if email and isinstance(email, str) and email.strip():
+        normalized_email = email.strip().lower()
+        email_key = f"lead:partial:email:{normalized_email}"
+        await redis.setex(email_key, 86400, payload_json)
+
+        # Persistir no Postgres (durável para automações n8n)
+        if db:
+            partial = PartialLead(
+                session_token=partial_id,
+                step_completed=data.step_completed,
+                data=data.data,
+                email=normalized_email,
+            )
+            db.add(partial)
+            await db.commit()
+
     logger.info("partial_lead_saved", partial_id=partial_id, step=data.step_completed)
     return {"id": partial_id, "step_completed": data.step_completed, "recoverable": True}
+
+
+async def recover_partial_lead(email: str) -> Optional[dict]:
+    redis = get_redis()
+    email_key = f"lead:partial:email:{email.strip().lower()}"
+    raw = await redis.get(email_key)
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return None

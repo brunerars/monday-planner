@@ -1,12 +1,13 @@
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
 from app.schemas.lead import (
     LeadCreate, LeadResponse, LeadDetail,
     LeadStatusUpdate, PartialLeadCreate, PartialLeadResponse,
+    PartialLeadRecoverResponse,
 )
 from app.services import lead_service
 
@@ -31,9 +32,9 @@ async def create_lead(data: LeadCreate, db: AsyncSession = Depends(get_db)):
     status_code=status.HTTP_201_CREATED,
     summary="Salvar form parcial (abandono)",
 )
-async def create_partial_lead(data: PartialLeadCreate):
+async def create_partial_lead(data: PartialLeadCreate, db: AsyncSession = Depends(get_db)):
     """Persiste dados parciais do form para recuperação posterior."""
-    return await lead_service.create_partial_lead(data)
+    return await lead_service.create_partial_lead(data, db)
 
 
 @router.get(
@@ -43,6 +44,22 @@ async def create_partial_lead(data: PartialLeadCreate):
 )
 async def list_leads(db: AsyncSession = Depends(get_db)):
     return await lead_service.get_all_leads(db)
+
+
+@router.get(
+    "/leads/partial/recover",
+    response_model=PartialLeadRecoverResponse,
+    summary="Recuperar form parcial por email",
+)
+async def recover_partial_lead(email: str):
+    """Busca dados parciais salvos para o email informado."""
+    result = await lead_service.recover_partial_lead(email)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "PARTIAL_NOT_FOUND", "message": "Nenhum dado parcial encontrado para este email"},
+        )
+    return result
 
 
 @router.get(

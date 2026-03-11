@@ -331,6 +331,18 @@
 }
 .submit-error .material-icons { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
 
+/* ── RECOVERY PROMPT ── */
+.recovery-prompt {
+  background: rgba(0,134,117,.06);
+  border: 1px solid rgba(0,134,117,.2);
+  border-radius: var(--radius-md);
+  padding: .85rem 1rem;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  margin-top: 1.25rem;
+  line-height: 1.5;
+}
+
 /* ── LOADING SPINNER ── */
 .form-spin {
   animation: formSpin .7s linear infinite;

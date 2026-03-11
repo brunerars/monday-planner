@@ -1,8 +1,25 @@
 # Docker Compose para desenvolvimento local
 # NAO usar em producao — use docker-compose.prod.yml via Portainer
-# Para o frontend: cd projeto/frontend && npm run dev  (roda separado, porta 5173)
+# Sobe backend + frontend + postgres + redis com: docker compose up -d
 
 services:
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://api:8000
+    volumes:
+      - ./projeto/frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - api
+    networks:
+      - internal
+    restart: unless-stopped
 
   api:
     build:
@@ -73,3 +90,4 @@ networks:
 volumes:
   pg_data:
   redis_data:
+  frontend_node_modules:

@@ -85,5 +85,11 @@ class PartialLeadResponse(BaseModel):
     recoverable: bool
 
 
+class PartialLeadRecoverResponse(BaseModel):
+    id: str
+    step_completed: int
+    data: dict[str, Any]
+
+
 class LeadStatusUpdate(BaseModel):
     status: str = Field(..., examples=["call_agendada"])
