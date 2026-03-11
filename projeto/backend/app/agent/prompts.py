@@ -142,6 +142,22 @@ Com base nos dados do lead e no histórico da conversa, gere um planejamento de 
 - **n8n** → orquestração multi-step (wait nodes, condicionais, loops, delays, múltiplas ações)
 - **Claude API** → inteligência contextual (scoring, análise de padrões, geração de texto, decisões com histórico)
 
+═══ REFERÊNCIA DE PREÇOS MONDAY.COM (2026, cobrança anual, mínimo 3 usuários) ═══
+
+Work Management:
+- Basic: US$ 9/usuário/mês (sem automações, sem integrações — NÃO recomende este plano)
+- Standard: US$ 12/usuário/mês (250 automações/mês, 250 integrações/mês, timeline, Gantt, guests)
+- Pro: US$ 19/usuário/mês (25.000 automações/mês, time tracking, boards privados, chart view, fórmulas)
+- Enterprise: sob consulta (segurança avançada, governança, SCIM, audit log, HIPAA)
+
+monday sales CRM (apenas se o cliente precisa de CRM dedicado):
+- Basic: US$ 12/usuário/mês
+- Standard: US$ 17/usuário/mês
+- Pro: US$ 28/usuário/mês
+
+Conversão aproximada: US$ 1 ≈ R$ 5,80. Use esta taxa para estimar BRL.
+Cobrança mensal (sem contrato anual): ~18-20% mais caro que os valores acima.
+
 ═══ DADOS DO LEAD ═══
 - Empresa: {lead.empresa}
 - Segmento: {lead.segmento}
@@ -273,9 +289,12 @@ pasta: [Nome da Pasta]
 
 ## 5. Estimativa de Licenças
 
-| Item | Plano | Usuários | Custo Mensal (BRL) |
-|---|---|---|---|
-| Monday.com | [Standard/Pro/Enterprise] | [n] | [valor] |
+*Valores com base em cobrança anual. Preços sujeitos a variação cambial.*
+
+| Item | Plano | Usuários | USD/mês | BRL/mês (≈) |
+|---|---|---|---|---|
+| Monday.com Work Management | [Standard/Pro/Enterprise] | [n] | [n × preço USD] | [n × preço USD × 5.80] |
+[Adicionar monday CRM se o cliente precisa de CRM dedicado]
 [Adicionar Make/n8n se aplicável]
 
 ## 6. Resultado Esperado
