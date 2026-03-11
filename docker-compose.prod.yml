@@ -25,9 +25,10 @@ services:
         order: start-first
       labels:
         - traefik.enable=true
-        - traefik.http.routers.mondayplanner.rule=Host(`monday-planner.arvsystems.cloud`)
+        - traefik.http.routers.mondayplanner.rule=Host(`monday-planner.arvsystems.cloud`) && (PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`) || PathPrefix(`/health`) || PathPrefix(`/openapi.json`))
         - traefik.http.routers.mondayplanner.entrypoints=websecure
         - traefik.http.routers.mondayplanner.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.mondayplanner.priority=10
         - traefik.http.services.mondayplanner.loadbalancer.server.port=8000
         - traefik.http.routers.mondayplanner.service=mondayplanner
     environment:
@@ -58,15 +59,13 @@ services:
         order: start-first
       labels:
         - traefik.enable=true
-        # Rotas do frontend: tudo que NÃO for /api, /docs, /redoc, /health, /openapi
-        - traefik.http.routers.mondayplanner-web.rule=Host(`monday-planner.arvsystems.cloud`) && !PathPrefix(`/api`) && !PathPrefix(`/docs`) && !PathPrefix(`/redoc`) && !PathPrefix(`/health`) && !PathPrefix(`/openapi.json`)
+        # Frontend: catch-all para rotas SPA (/, /form, /chat, etc.)
+        - traefik.http.routers.mondayplanner-web.rule=Host(`monday-planner.arvsystems.cloud`)
         - traefik.http.routers.mondayplanner-web.entrypoints=websecure
         - traefik.http.routers.mondayplanner-web.tls.certresolver=letsencryptresolver
         - traefik.http.routers.mondayplanner-web.priority=1
         - traefik.http.services.mondayplanner-web.loadbalancer.server.port=80
         - traefik.http.routers.mondayplanner-web.service=mondayplanner-web
-        # Backend tem prioridade maior nas rotas da API
-        - traefik.http.routers.mondayplanner.priority=10
 
   db:
     image: postgres:16-alpine
