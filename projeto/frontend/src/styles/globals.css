@@ -481,8 +481,9 @@ body {
 }
 .hero-float--a {
   width: 24vw; height: auto;
-  top: calc(var(--nav-h) + 4%);
-  right: 3%;
+  top: calc(var(--nav-h) + 2%);
+  right: 2%;
+  z-index: 4;
   animation-delay: .6s;
   animation-name: floatIn, floatDrift;
   animation-duration: 1.2s, 9s;
@@ -491,9 +492,10 @@ body {
   animation-iteration-count: 1, infinite;
 }
 .hero-float--b {
-  width: 17vw; height: auto;
-  top: calc(var(--nav-h) + 24%);
-  right: 28%;
+  width: 19vw; height: auto;
+  top: calc(var(--nav-h) + 38%);
+  right: 6%;
+  z-index: 2;
   animation-delay: .8s;
   animation-name: floatIn, floatDriftAlt;
   animation-duration: 1.2s, 11s;
@@ -502,9 +504,10 @@ body {
   animation-iteration-count: 1, infinite;
 }
 .hero-float--c {
-  width: 13vw; height: auto;
-  top: calc(var(--nav-h) + 2%);
-  right: 19%;
+  width: 15vw; height: auto;
+  top: calc(var(--nav-h) + 18%);
+  right: 28%;
+  z-index: 3;
   animation-delay: 1s;
   animation-name: floatIn, floatDrift;
   animation-duration: 1.2s, 7s;
@@ -867,9 +870,9 @@ body {
    RESPONSIVE
 ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .hero-float--a { width: 30vw; }
-  .hero-float--b { width: 22vw; }
-  .hero-float--c { width: 17vw; }
+  .hero-float--a { width: 28vw; }
+  .hero-float--b { width: 22vw; right: 4%; }
+  .hero-float--c { width: 18vw; right: 24%; }
   .hero-desc { max-width: 45vw; }
 }
 
