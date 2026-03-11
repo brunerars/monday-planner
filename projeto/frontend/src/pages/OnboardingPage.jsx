@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import '../styles/onboarding.css'
+import { API_BASE as API } from '../config'
 
 export default function OnboardingPage() {
   const [params] = useSearchParams()
@@ -12,7 +13,7 @@ export default function OnboardingPage() {
   // Fetch lead name for personalisation (best-effort)
   useEffect(() => {
     if (!leadId) return
-    fetch(`/api/v1/leads/${leadId}`)
+    fetch(`${API}/leads/${leadId}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.nome_contato) setNome(data.nome_contato.split(' ')[0]) })
       .catch(() => {})

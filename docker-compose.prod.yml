@@ -1,20 +1,64 @@
-# Docker Compose para producao (Docker Swarm via Portainer)
-# Deploy: Portainer -> Stacks -> Add Stack -> colar este arquivo
-# NUNCA expoe portas do DB ou Redis para fora da rede interna
-# Variaveis sensiveis: configurar como Environment Variables no Portainer
+# docker-compose.prod.yml - Deploy via Portainer Stacks (Docker Swarm)
+#
+# ANTES DE DEPLOYAR (Portainer Stack):
+# 1. Configurar variáveis de ambiente no Portainer (Stack env ou .env):
+#    - DATABASE_URL, REDIS_URL, CLAUDE_API_KEY, POSTGRES_PASSWORD, etc.
+# 2. As imagens são publicadas via GitHub Actions no GHCR:
+#    - ghcr.io/brunerars/monday-planner:latest (backend)
+#    - ghcr.io/brunerars/monday-planner-frontend:latest (frontend)
+# 3. Configurar DNS (CNAME → manager.arvsystems.cloud):
+#    - monday-planner.arvsystems.cloud → frontend
+#    - api.monday-planner.arvsystems.cloud → backend
 
 version: "3.8"
 
 services:
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/brunerars/monday-planner-frontend:latest}
+    networks:
+      - network_public
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.mondayplanner-web.rule=Host(`monday-planner.arvsystems.cloud`)
+        - traefik.http.routers.mondayplanner-web.entrypoints=websecure
+        - traefik.http.routers.mondayplanner-web.tls.certresolver=letsencryptresolver
+        - traefik.http.services.mondayplanner-web.loadbalancer.server.port=80
+        - traefik.http.routers.mondayplanner-web.service=mondayplanner-web
 
   api:
     image: ${IMAGE:-ghcr.io/brunerars/monday-planner:latest}
     networks:
       - network_public
       - internal
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-20250514}
+      - MAKE_WEBHOOK_URL=${MAKE_WEBHOOK_URL}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - API_BASE_URL=${API_BASE_URL:-https://api.monday-planner.arvsystems.cloud}
+      - CTA_CALENDLY_URL=${CTA_CALENDLY_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://monday-planner.arvsystems.cloud}
+      - ENVIRONMENT=production
+      - LOG_LEVEL=info
     deploy:
-      mode: replicated
       replicas: 2
+      resources:
+        limits:
+          memory: 768M
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -25,79 +69,41 @@ services:
         order: start-first
       labels:
         - traefik.enable=true
-        - traefik.http.routers.mondayplanner.rule=Host(`monday-planner.arvsystems.cloud`) && (PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`) || PathPrefix(`/health`) || PathPrefix(`/openapi.json`))
-        - traefik.http.routers.mondayplanner.entrypoints=websecure
-        - traefik.http.routers.mondayplanner.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.mondayplanner.priority=10
-        - traefik.http.services.mondayplanner.loadbalancer.server.port=8000
-        - traefik.http.routers.mondayplanner.service=mondayplanner
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
-      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-20250514}
-      - MAKE_WEBHOOK_URL=${MAKE_WEBHOOK_URL}
-      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
-      - API_BASE_URL=${API_BASE_URL:-https://monday-planner.arvsystems.cloud}
-      - CTA_CALENDLY_URL=${CTA_CALENDLY_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS:-https://monday-planner.arvsystems.cloud}
-      - ENVIRONMENT=production
-      - LOG_LEVEL=info
-
-  frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/brunerars/monday-planner-frontend:latest}
-    networks:
-      - network_public
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: start-first
-      labels:
-        - traefik.enable=true
-        # Frontend: catch-all para rotas SPA (/, /form, /chat, etc.)
-        - traefik.http.routers.mondayplanner-web.rule=Host(`monday-planner.arvsystems.cloud`)
-        - traefik.http.routers.mondayplanner-web.entrypoints=websecure
-        - traefik.http.routers.mondayplanner-web.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.mondayplanner-web.priority=1
-        - traefik.http.services.mondayplanner-web.loadbalancer.server.port=80
-        - traefik.http.routers.mondayplanner-web.service=mondayplanner-web
+        - traefik.http.routers.mondayplanner-api.rule=Host(`api.monday-planner.arvsystems.cloud`)
+        - traefik.http.routers.mondayplanner-api.entrypoints=websecure
+        - traefik.http.routers.mondayplanner-api.tls.certresolver=letsencryptresolver
+        - traefik.http.services.mondayplanner-api.loadbalancer.server.port=8000
+        - traefik.http.routers.mondayplanner-api.service=mondayplanner-api
 
   db:
     image: postgres:16-alpine
     networks:
       - internal
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints:
-          - node.role == manager
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-mondayplanner}
       - POSTGRES_USER=${POSTGRES_USER:-mondayplanner}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - pg_data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
 
   redis:
     image: redis:7-alpine
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     networks:
       - internal
+    volumes:
+      - redis_data:/data
     deploy:
-      mode: replicated
       replicas: 1
       restart_policy:
         condition: on-failure
-    volumes:
-      - redis_data:/data
 
 networks:
   network_public:

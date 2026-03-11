@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import '../styles/chat.css'
-
-const API = '/api/v1'
+import { API_BASE as API } from '../config'
 
 export default function ChatPage() {
   const [params] = useSearchParams()

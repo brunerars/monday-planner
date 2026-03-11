@@ -79,8 +79,8 @@ Quando o plano é gerado com sucesso, o backend faz `POST` ao `MAKE_WEBHOOK_URL`
   "score": 55,
   "areas_interesse": ["Vendas", "Projetos", "Suporte"],
   "plan_id": "uuid",
-  "plan_view_url": "https://planner.arvsystems.cloud/api/v1/plans/{id}/view",
-  "plan_download_url": "https://planner.arvsystems.cloud/api/v1/plans/{id}/download",
+  "plan_view_url": "https://api.monday-planner.arvsystems.cloud/api/v1/plans/{id}/view",
+  "plan_download_url": "https://api.monday-planner.arvsystems.cloud/api/v1/plans/{id}/download",
   "summary": {
     "boards": 3,
     "automacoes_make": 5,

@@ -6,6 +6,7 @@ import FormStep2 from '../components/form/FormStep2'
 import FormStep3 from '../components/form/FormStep3'
 import FormStep4 from '../components/form/FormStep4'
 import '../styles/form.css'
+import { API_BASE as API } from '../config'
 
 const STORAGE_KEY = 'mp_form_data'
 const TOTAL_STEPS = 4
@@ -98,7 +99,7 @@ export default function FormPage() {
         dor_principal: data.dor_principal,
       },
     })
-    navigator.sendBeacon('/api/v1/leads/partial', new Blob([payload], { type: 'application/json' }))
+    navigator.sendBeacon(`${API}/leads/partial`, new Blob([payload], { type: 'application/json' }))
   }, [step, data])
 
   useEffect(() => {
@@ -119,7 +120,7 @@ export default function FormPage() {
     // Recovery check: when leaving step 3 (email just validated)
     if (step === 3 && data.email) {
       try {
-        const res = await fetch(`/api/v1/leads/partial/recover?email=${encodeURIComponent(data.email)}`)
+        const res = await fetch(`${API}/leads/partial/recover?email=${encodeURIComponent(data.email)}`)
         if (res.ok) {
           const saved = await res.json()
           // Only offer recovery if saved data has more progress
@@ -174,7 +175,7 @@ export default function FormPage() {
     setSubmitError('')
 
     try {
-      const res = await fetch('/api/v1/leads', {
+      const res = await fetch(`${API}/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

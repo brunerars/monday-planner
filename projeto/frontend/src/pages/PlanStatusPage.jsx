@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import '../styles/chat.css'
-
-const API = '/api/v1'
+import { API_BASE as API } from '../config'
 const POLL_INTERVAL = 3000 // 3s
 
 export default function PlanStatusPage() {

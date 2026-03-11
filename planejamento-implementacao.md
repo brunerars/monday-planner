@@ -96,8 +96,8 @@
   "score": 55,
   "areas_interesse": ["Vendas", "Projetos"],
   "plan_id": "uuid",
-  "plan_view_url": "https://monday-planner.arvsystems.cloud/api/v1/plans/{id}/view",
-  "plan_download_url": "https://monday-planner.arvsystems.cloud/api/v1/plans/{id}/download",
+  "plan_view_url": "https://api.monday-planner.arvsystems.cloud/api/v1/plans/{id}/view",
+  "plan_download_url": "https://api.monday-planner.arvsystems.cloud/api/v1/plans/{id}/download",
   "summary": { ... }
 }
 ```
@@ -106,7 +106,7 @@
 - [ ] **Cenário Make**: Webhook trigger → cria item no board Monday → envia email ao lead
 - [ ] **Board Monday "Pipeline MondayPlanner"**: Novo Lead → Planejamento Gerado → Call Agendada → Proposta → Fechado
 - [ ] **Template de email**: link para `plan_view_url` + CTA Calendly
-- [ ] **Smoke test**: rodar `python scripts/test_webhook_payload.py --base-url https://monday-planner.arvsystems.cloud` → verificar item criado + email recebido
+- [ ] **Smoke test**: rodar `python scripts/test_webhook_payload.py --base-url https://api.monday-planner.arvsystems.cloud` → verificar item criado + email recebido
 
 ### Pendente — Automação n8n (partial leads)
 - [ ] Cron job a cada 4h: busca `partial_leads` no Postgres que não viraram leads completos
@@ -197,4 +197,4 @@
 - `CLAUDE.md` — guia técnico completo (stack, schemas, endpoints, regras)
 - `setup-n8n.md` — guia de automações n8n (cron partial leads, payload Make, query SQL)
 - `scripts/test_webhook_payload.py` — simula fluxo completo e imprime payload Make
-- OpenAPI interativa em `https://monday-planner.arvsystems.cloud/docs`
+- OpenAPI interativa em `https://api.monday-planner.arvsystems.cloud/docs`
