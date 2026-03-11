@@ -39,6 +39,23 @@ def calculate_score(data: LeadCreate) -> int:
     return score
 
 
+def calculate_score_breakdown(lead: Lead) -> dict:
+    """Retorna o breakdown detalhado do score para inclusão no payload Make."""
+    breakdown = {}
+    breakdown["tipo_negocio"] = {"valor": lead.tipo_negocio, "pontos": 20 if lead.tipo_negocio == "B2B" else 10}
+    breakdown["porte"] = {"valor": lead.porte, "pontos": _SCORE_PORTE.get(lead.porte, 0)}
+    if lead.colaboradores:
+        breakdown["colaboradores"] = {"valor": lead.colaboradores, "pontos": _SCORE_COLABORADORES.get(lead.colaboradores, 0)}
+    areas = lead.areas_interesse or []
+    breakdown["areas_interesse"] = {"valor": areas, "pontos": len(areas) * 5}
+    if lead.usa_monday:
+        pontos = 10 if lead.usa_monday == "sim" else (5 if lead.usa_monday == "avaliando" else 0)
+        breakdown["usa_monday"] = {"valor": lead.usa_monday, "pontos": pontos}
+    breakdown["dor_principal"] = {"valor": bool(lead.dor_principal), "pontos": 5 if lead.dor_principal else 0}
+    breakdown["total"] = lead.score
+    return breakdown
+
+
 async def create_lead(db: AsyncSession, data: LeadCreate) -> Lead:
     result = await db.execute(select(Lead).where(Lead.email == data.email))
     existing = result.scalar_one_or_none()

@@ -27,6 +27,7 @@ from app.config import settings
 from app.models.chat_message import ChatMessage
 from app.models.lead import Lead
 from app.models.plan import Plan
+from app.services.lead_service import calculate_score_breakdown
 from app.utils.redis_client import get_redis
 
 logger = structlog.get_logger()
@@ -100,6 +101,7 @@ async def _notify_make(lead: Lead, plan: Plan) -> None:
         "tipo_negocio": lead.tipo_negocio,
         "porte": lead.porte,
         "score": lead.score,
+        "score_breakdown": calculate_score_breakdown(lead),
         "areas_interesse": lead.areas_interesse or [],
         "plan_id": str(plan.id),
         "plan_view_url": view_url,
