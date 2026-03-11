@@ -8,6 +8,7 @@
 !.env.example
 
 # Dependencias locais (reinstaladas no build)
+**/node_modules/
 __pycache__/
 *.pyc
 *.pyo

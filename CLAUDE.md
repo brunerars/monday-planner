@@ -352,9 +352,10 @@ cd projeto/backend && python -m pytest tests/test_agent.py -v
 - Usuário não-root: `appuser` (uid 1000)
 
 ### Dockerfile.frontend (raiz do repositório)
-- Stage 1 (builder): `node:20-alpine` — `npm ci` + `npm run build` em `projeto/frontend/`
+- Stage 1 (builder): `node:20-alpine` — `npm ci` + `chmod +x node_modules/.bin/*` + `npm run build` em `projeto/frontend/`
 - Stage 2 (serve): `nginx:alpine` — serve `/app/dist` com `nginx.frontend.conf`
 - Expõe porta 80
+- **IMPORTANTE**: Alpine não preserva permissões de execução nos binários de `node_modules/.bin/`. Sempre incluir `chmod +x node_modules/.bin/*` após `npm ci`/`npm install` em Dockerfiles baseados em Alpine.
 
 ### docker-compose.yml (dev)
 - Serviços: `frontend` (node:20-alpine, porta 5173), `api`, `db` (postgres:16-alpine), `redis` (redis:7-alpine)
