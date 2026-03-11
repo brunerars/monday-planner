@@ -15,14 +15,6 @@ export default function CtaSection() {
           Quero meu planejamento
           <span className="material-icons" style={{ fontSize: 18 }}>arrow_forward</span>
         </Link>
-        <a
-          href="/api/v1/plans/00000000-0000-0000-0000-000000000000/view"
-          className="btn btn-outline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Ver exemplo de plano
-        </a>
       </div>
     </section>
   )
